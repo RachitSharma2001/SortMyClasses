@@ -26,6 +26,6 @@ function getProfessorName(){
 
 }*/
 
-chrome.runtime.sendMessage({greeting: "hello"}, function(response) {
+chrome.runtime.sendMessage({tid: "786121"}, function(response) {
     console.log(response.returned_text);
   });
