@@ -25,11 +25,20 @@ function detectSearchChange(){
 function getProfessorName(){
 
 }*/
-// RatingValue__Numerator-qw8sqy-2 liyUjw
+
 chrome.runtime.sendMessage({tid: "786121"}, function(response) {
-    console.log(response.returned_text);
-    //let jsonText = JSON.parse(response.returned_text);
-    //console.log("We have jsonText!");
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(response.returned_text, "text/html");
+    console.log(doc.getElementsByClassName("RatingValue__Numerator-qw8sqy-2 liyUjw")[0].innerHTML);
+  });
+
+  chrome.runtime.sendMessage({tid: "2585755"}, function(response) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(response.returned_text, "text/html");
+    console.log(doc.getElementsByClassName("RatingValue__Numerator-qw8sqy-2 liyUjw")[0].innerHTML);
+  });
+
+  chrome.runtime.sendMessage({tid: "2503455"}, function(response) {
     const parser = new DOMParser();
     const doc = parser.parseFromString(response.returned_text, "text/html");
     console.log(doc.getElementsByClassName("RatingValue__Numerator-qw8sqy-2 liyUjw")[0].innerHTML);
