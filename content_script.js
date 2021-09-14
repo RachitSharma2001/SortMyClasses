@@ -26,16 +26,6 @@ function getProfessorName(){
 
 }*/
 
-//chrome.runtime.sendMessage({message : "fetch_datav"});
 chrome.runtime.sendMessage({greeting: "hello"}, function(response) {
     console.log(response.returned_text);
   });
-
-  /*
-    $.ajax({
-            url: "https://www.ratemyprofessors.com/ShowRatings.jsp?tid=786121",
-    })
-    .done(function(html) {
-        console.log("The html: " + html);
-    });
-*/
