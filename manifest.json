@@ -2,9 +2,19 @@
     "name": "Testing",
     "version": "0.1",
     "manifest_version": 3,
+    "background": {
+        "service_worker": "background.js"
+    },
+    "host_permissions": [
+        "https://www.ratemyprofessors.com/ShowRatings.jsp?*"
+    ],
     "content_scripts": [
       { "run_at" :"document_end",
       "matches": ["https://my.ucdavis.edu/schedulebuilder/index.cfm*"],
-      "js": ["content_script.js"]
+      "js": ["jquery-3.5.1.min.js", "content_script.js"]
+      }],
+      "web_accessible_resources": [{
+        "resources": ["jquery-3.5.1.min.js"],
+        "matches": ["<all_urls>"]
       }]
   }
