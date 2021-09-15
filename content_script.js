@@ -5,22 +5,48 @@ function createObserver(target, profJson){
     return new MutationObserver(function(mutations) {
         mutations.forEach(function(mutation) {
             var allClasses = target.getElementsByClassName("data-item");
-
+            var savedClassData = [];
             /* Changing the rows
             var saveFirstClass = allClasses[0].innerHTML;
             allClasses[0].innerHTML = allClasses[allClasses.length - 1].innerHTML;
             allClasses[allClasses.length - 1].innerHTML = saveFirstClass;
             */
 
+            var profRatings = [];
             for(var classIndex = 0; classIndex < allClasses.length; classIndex++){
+                savedClassData.push(allClasses[classIndex].innerHTML);
                 var profHrefs = allClasses[classIndex].getElementsByClassName("data-item-long active")[0].getElementsByClassName("float-left")[0].getElementsByClassName("clearfix")[0].getElementsByClassName("data-column")[4];
                 var profName = getProfessorName(profHrefs);
-                console.log("Professor Name: " + profName);
                 var profTid = getTid(profName, profJson);
-                console.log("Prof Tid: " + profTid);
+                var profScore = getProfRating(profTid);
+                
+                var profObj = {rating : profScore, classIndex : classIndex};
+                profRatings.push(profObj);
+            }
+            sortedClasses = sortRatings(profRatings);
+            
+            for(var classIndex = 0; classIndex < allClasses.length; classIndex++){
+                allClasses[classIndex].innerHTML= savedClassData[sortedClasses[classIndex].classIndex];
             }
         });
     });
+}
+
+function sortRatings(profRatings){
+    profRatings.sort(function compareProfs(profObjLeft, profObjRight){
+        console.log("Left, right rating: " + profObjLeft.rating + ", " + profObjRight.rating);
+        console.log("Left, right class index: " + profObjLeft.classIndex + ", " + profObjRight.classIndex);
+
+        if(profObjLeft.rating < profObjRight.rating){
+            return -1;
+        }
+        return -1;
+    });
+    return profRatings;
+}
+
+function getProfRating(profTid){
+    return 1;
 }
 
 function getTid(profName, profJson){
