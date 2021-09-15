@@ -12,5 +12,9 @@
       { "run_at" :"document_end",
       "matches": ["https://my.ucdavis.edu/schedulebuilder/index.cfm*"],
       "js": ["content_script.js"]
-      }]
+    }],
+    "web_accessible_resources": [{
+        "resources": ["ProfTids.txt"],
+        "matches": ["<all_urls>"]
+    }]
   }

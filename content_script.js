@@ -1,47 +1,89 @@
-/*
 // Observe when DOM changes, meaning user searched for new classes
-function createObserver(target){
+function createObserver(target, profJson){
+    console.log("Prof Json: " + profJson + " " + profJson["E_Fuchs"]);
+    
     return new MutationObserver(function(mutations) {
         mutations.forEach(function(mutation) {
             var allClasses = target.getElementsByClassName("data-item");
 
-            console.log("allclasses[0] inner html: " + allClasses[0].innerHTML);
-            console.log("allclasses[1] inner html: " + allClasses[1].innerHTML);
-
+            /* Changing the rows
             var saveFirstClass = allClasses[0].innerHTML;
             allClasses[0].innerHTML = allClasses[allClasses.length - 1].innerHTML;
             allClasses[allClasses.length - 1].innerHTML = saveFirstClass;
+            */
+
+            for(var classIndex = 0; classIndex < allClasses.length; classIndex++){
+                var profHrefs = allClasses[classIndex].getElementsByClassName("data-item-long active")[0].getElementsByClassName("float-left")[0].getElementsByClassName("clearfix")[0].getElementsByClassName("data-column")[4];
+                var profName = getProfessorName(profHrefs);
+                console.log("Professor Name: " + profName);
+                var profTid = getTid(profName, profJson);
+                console.log("Prof Tid: " + profTid);
+            }
         });
     });
 }
 
-function detectSearchChange(){
+function getTid(profName, profJson){
+    if(profName == null){
+        return -1;
+    }
+    var profNameInFormat = getNameInFormat(profName);
+    return profJson[profNameInFormat];
+}
+
+function getNameInFormat(profName){
+    return profName.replace(". ", "_");
+}
+
+function hasRMPLink(profInnerHtml){
+    return profInnerHtml.includes("(<a href");
+}
+
+/* Assumes profInnerHtml contains an RMP Link */
+function getOnlyName(profInnerHtml){
+    return profInnerHtml.substring(0, profInnerHtml.indexOf("(<a href")-1);
+}
+
+/* Assumes that hasRMPLink of profInner Html is true*/
+function extractNameFromHtml(firstProf){
+    var givenProf = firstProf;
+    if(hasRMPLink(givenProf)){
+        givenProf = getOnlyName(givenProf);
+    }
+    return givenProf;
+}
+
+function getProfessorName(profHrefs){
+    var profTags = profHrefs.getElementsByTagName("a");
+
+    /* Later, be able to return all the professors of a class
+    for(i = 0; i < profTags.length; i++){
+        var profName = profHrefs.getElementsByTagName("a")[i].innerHTML;
+        
+    }*/
+    if(profTags.length > 0){
+        var profName = extractNameFromHtml(profTags[0].innerHTML);
+        return getNameInFormat(profName);
+    }
+    return null;
+}
+
+function detectSearchChange(profJson){
     var genericConfig = { attributes: true, childList: true, characterData: true };
     var inlineTarget = document.getElementById("inlineCourseResultsDiv");
-    var inlineObserver = createObserver(inlineTarget);
+    var inlineObserver = createObserver(inlineTarget, profJson);
     inlineObserver.observe(inlineTarget, genericConfig);
 }
 
-function getProfessorName(){
+const url = chrome.runtime.getURL('ProfTids.txt');
+fetch(url)
+.then((response) => response.json()) //assuming file contains json
+.then((json) => detectSearchChange(json));
 
-}*/
 
-/* 
-    TODO:
-    1. We can change the html rows that represent the classes (and hence sort)
-    2. We can scrape the rating of a professor 
-    3. Now what we need to do:
-        a. Make a function getProfessorNames which returns the names of all the professors
-        b. Make a function that takes in a professor name and outputs tid
-        c. Make a function to scrape rating of each professor
-        d. Somehow sort the rating 
-        e. Sort the html div elements to reflect the rating
-        f. Show the rating on schedule builder (or don't show it if they also have that thing that shows rating)
-            BTW, you are obviously allowed to use two extensions for same website, as we literally use the RMP thing and this for 
-            schedule builder and both are applied. So someone using the green red extension thing can also use our rmp thing and also 
-            use our sorting thing
-*/
 
+
+/* Getting Professor Rating
 chrome.runtime.sendMessage({tid: "786121"}, function(response) {
     const parser = new DOMParser();
     const doc = parser.parseFromString(response.returned_text, "text/html");
@@ -59,3 +101,4 @@ chrome.runtime.sendMessage({tid: "786121"}, function(response) {
     const doc = parser.parseFromString(response.returned_text, "text/html");
     console.log(doc.getElementsByClassName("RatingValue__Numerator-qw8sqy-2 liyUjw")[0].innerHTML);
   });
+*/
