@@ -1,3 +1,5 @@
+var TBA_RATING = 6;
+
 // Observe when DOM changes, meaning user searched for new classes
 function createObserver(target, profJson){
     console.log("Prof Json: " + profJson + " " + profJson["E_Fuchs"]);
@@ -6,28 +8,26 @@ function createObserver(target, profJson){
         mutations.forEach(function(mutation) {
             var allClasses = target.getElementsByClassName("data-item");
             var savedClassData = [];
-            /* Changing the rows
-            var saveFirstClass = allClasses[0].innerHTML;
-            allClasses[0].innerHTML = allClasses[allClasses.length - 1].innerHTML;
-            allClasses[allClasses.length - 1].innerHTML = saveFirstClass;
-            */
-
             var profRatings = [];
+
+            
             for(var classIndex = 0; classIndex < allClasses.length; classIndex++){
                 savedClassData.push(allClasses[classIndex].innerHTML);
+                
                 var profHrefs = allClasses[classIndex].getElementsByClassName("data-item-long active")[0].getElementsByClassName("float-left")[0].getElementsByClassName("clearfix")[0].getElementsByClassName("data-column")[4];
                 var profName = getProfessorName(profHrefs);
                 var profTid = getTid(profName, profJson);
                 var profScore = getProfRating(profTid);
                 
-                var profObj = {rating : profScore, classIndex : classIndex};
-                profRatings.push(profObj);
-            }
-            sortedClasses = sortRatings(profRatings);
+                console.log("Professor score: " + profScore);
+                /*var profObj = {rating : profScore, classIndex : classIndex};
+                profRatings.push(profObj);*/
+            } 
+            /*sortedClasses = sortRatings(profRatings);
             
             for(var classIndex = 0; classIndex < allClasses.length; classIndex++){
                 allClasses[classIndex].innerHTML= savedClassData[sortedClasses[classIndex].classIndex];
-            }
+            }*/
         });
     });
 }
@@ -40,13 +40,28 @@ function sortRatings(profRatings){
         if(profObjLeft.rating < profObjRight.rating){
             return -1;
         }
-        return -1;
+        return 0;
     });
     return profRatings;
 }
 
 function getProfRating(profTid){
-    return 1;
+    if(profTid == -1){
+        return TBA_RATING;
+    }
+    var profRating = -1;
+    chrome.runtime.sendMessage({tid: "" + profTid}, function(response) {
+        let parser = new DOMParser();
+        let doc = parser.parseFromString(response.returned_text, "text/html");
+        console.log(doc);
+        console.log(doc.getElementsByClassName("RatingValue__Numerator-qw8sqy-2 liyUjw")[0].innerHTML)
+        profRating = doc.getElementsByClassName("RatingValue__Numerator-qw8sqy-2 liyUjw")[0].innerHTML;
+    });
+    /*if(profRating == -1){
+        setTimeout(getProfRating, 300);
+    }else{
+        return profRating;
+    }*/
 }
 
 function getTid(profName, profJson){
