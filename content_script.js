@@ -12,27 +12,24 @@ function createObserver(target, profJson){
             var profRatings = [];
             var profTids = [];
             
-            var clearfix = allClasses[0].getElementsByClassName("data-item-long active")[0].getElementsByClassName("float-left")[0].getElementsByClassName("clearfix")[0];
-            var classRating = document.createElement("div");
-            classRating.innerHTML = '<p> Overall: 2 </p>';
-            clearfix.appendChild(classRating);
-            
-            /*for(var classIndex = 0; classIndex < allClasses.length; classIndex++){
+            for(var classIndex = 0; classIndex < allClasses.length; classIndex++){
                 savedClassData.push(allClasses[classIndex].innerHTML);
                 
                 var profHrefs = allClasses[classIndex].getElementsByClassName("data-item-long active")[0].getElementsByClassName("float-left")[0].getElementsByClassName("clearfix")[0].getElementsByClassName("data-column")[4];
                 var profName = getProfessorName(profHrefs);
                 var profTid = getTid(profName, profJson);
                 
+                const savedClassIndex = classIndex;
                 chrome.runtime.sendMessage({tid: "" + profTid}, function(response) {
                     let parser = new DOMParser();
                     let doc = parser.parseFromString(response.returned_text, "text/html");
                     //console.log(doc);
                     //console.log(doc.getElementsByClassName("RatingValue__Numerator-qw8sqy-2 liyUjw")[0].innerHTML)
-                    //profRating = doc.getElementsByClassName("RatingValue__Numerator-qw8sqy-2 liyUjw")[0].innerHTML;
-                    document.
+                    profRating = doc.getElementsByClassName("RatingValue__Numerator-qw8sqy-2 liyUjw")[0].innerHTML;
+                    console.log("Class index: " + savedClassIndex);
+                    addRatingToClass(allClasses[savedClassIndex], profRating);
                 });
-            }*/
+            }
             
 
             
@@ -43,6 +40,13 @@ function createObserver(target, profJson){
             }*/
         });
     });
+}
+
+function addRatingToClass(givenClass, profRating){
+    var clearfix = givenClass.getElementsByClassName("data-item-long active")[0].getElementsByClassName("float-left")[0].getElementsByClassName("clearfix")[0];
+    var classRating = document.createElement("div");
+    classRating.innerHTML = '<p> Overall: ' + profRating + '</p>';
+    clearfix.appendChild(classRating);
 }
 
 function sortRatings(profRatings){
