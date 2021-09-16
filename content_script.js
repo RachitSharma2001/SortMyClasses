@@ -6,30 +6,34 @@ function createObserver(target, profJson){
     
     return new MutationObserver(function(mutations) {
         mutations.forEach(function(mutation) {
-            //Promise.all(urls.DOMParser())
-            var url1 = "https://www.ratemyprofessors.com/ShowRatings.jsp?sid=1073&tid=2317111";
-            var url2 = "https://www.ratemyprofessors.com/ShowRatings.jsp?tid=786121";
-            chrome.runtime.sendMessage({urls: [url1, url2]}, function(response) {
-                console.log("Response: " + response.scores);
-            });
-            /*
+            
             var allClasses = target.getElementsByClassName("data-item");
             var savedClassData = [];
             var profRatings = [];
             var profTids = [];
             
-            for(var classIndex = 0; classIndex < allClasses.length; classIndex++){
+            var clearfix = allClasses[0].getElementsByClassName("data-item-long active")[0].getElementsByClassName("float-left")[0].getElementsByClassName("clearfix")[0];
+            var classRating = document.createElement("div");
+            classRating.innerHTML = '<p> Overall: 2 </p>';
+            clearfix.appendChild(classRating);
+            
+            /*for(var classIndex = 0; classIndex < allClasses.length; classIndex++){
                 savedClassData.push(allClasses[classIndex].innerHTML);
                 
                 var profHrefs = allClasses[classIndex].getElementsByClassName("data-item-long active")[0].getElementsByClassName("float-left")[0].getElementsByClassName("clearfix")[0].getElementsByClassName("data-column")[4];
                 var profName = getProfessorName(profHrefs);
                 var profTid = getTid(profName, profJson);
                 
-            }
+                chrome.runtime.sendMessage({tid: "" + profTid}, function(response) {
+                    let parser = new DOMParser();
+                    let doc = parser.parseFromString(response.returned_text, "text/html");
+                    //console.log(doc);
+                    //console.log(doc.getElementsByClassName("RatingValue__Numerator-qw8sqy-2 liyUjw")[0].innerHTML)
+                    //profRating = doc.getElementsByClassName("RatingValue__Numerator-qw8sqy-2 liyUjw")[0].innerHTML;
+                    document.
+                });
+            }*/
             
-            chrome.runtime.sendMessage({tid_array: profTids}, function(response){
-                console.log(response.returned_scores);
-            });*/
 
             
             /*sortedClasses = sortRatings(profRatings);
@@ -130,7 +134,13 @@ fetch(url)
 .then((response) => response.json()) //assuming file contains json
 .then((json) => detectSearchChange(json));
 
+/*
+// Add Rating header
+            var rating_header = document.createElement("div");
+            rating_header.innerHTML = '<div class="data-column column-header align-left" style="width:18%;"> Ratings </div>';
+            document.getElementById("inlineCourseResultsContainer").getElementsByClassName("data-container-header")[0].getElementsByClassName("data-header-long data-row clearfix")[0].getElementsByClassName("float-left").appendChild(rating_header);
 
+*/
 
 
 /* Getting Professor Rating

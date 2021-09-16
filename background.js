@@ -13,30 +13,13 @@
             schedule builder and both are applied. So someone using the green red extension thing can also use our rmp thing and also 
             use our sorting thing
 */
-/*
+
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
         fetch('https://www.ratemyprofessors.com/ShowRatings.jsp?tid=' + request.tid)
             .then(response => response.text())
             .then(text => sendResponse({returned_text:text}))
             .catch(error => console.log("Error: " + error));
-        return true;
-    }
-  );*/
-  /*
-  let parser = new DOMParser();
-        let doc = parser.parseFromString(response.returned_text, "text/html");
-        console.log(doc);
-        console.log(doc.getElementsByClassName("RatingValue__Numerator-qw8sqy-2 liyUjw")[0].innerHTML)*/
-  chrome.runtime.onMessage.addListener(
-    function(request, sender, sendResponse) {
-        urls = request.urls;
-        var parser = new DOMParser();
-        Promise.all(urls.map(url => fetch(url)
-            .then(response => response.text())
-            .then(profHTML => parser.parseFromString(profHTML, "text/html").getElementsByClassName("RatingValue__Numerator-qw8sqy-2 liyUjw")[0].innerHTML)))
-            .then(scores => sendResponse({returned_scors:scores}))
-            .catch(error => console.log("Error: " + error))
         return true;
     }
   );
