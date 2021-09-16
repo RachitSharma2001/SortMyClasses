@@ -19,32 +19,42 @@ function createObserver(target, profJson){
                 var profName = getProfessorName(profHrefs);
                 var profTid = getTid(profName, profJson);
                 
-                const savedClassIndex = classIndex;
-                chrome.runtime.sendMessage({tid: "" + profTid}, async function(response) {
-                    let parser = new DOMParser();
-                    let doc = parser.parseFromString(response.returned_text, "text/html");
-                    //console.log(doc);
-                    //console.log(doc.getElementsByClassName("RatingValue__Numerator-qw8sqy-2 liyUjw")[0].innerHTML)
-                    profRating = doc.getElementsByClassName("RatingValue__Numerator-qw8sqy-2 liyUjw")[0].innerHTML;
-                    //console.log("Class index: " + savedClassIndex);
-                    //addRatingToClass(allClasses[savedClassIndex], profRating);
-                    profRatings.push(profRating);
-                    //console.log("Added!")
-                    // idea: just check to see if profRatings size == allClasses.length, and if so then call function to sort profRatings with index, and then 
-                    // call function to switch html divs
-                    if(profRatings.length == allClasses.length - 1){
-                        console.log("Prof ratings length: " + profRatings.length);
-                        console.log("ProfRatings: " + profRatings);
-                        // Call function that takes in profRatings and sorts it, and then calls function to sort html divs 
+                if(profTid != -1){
+                    chrome.runtime.sendMessage({tid: "" + profTid}, async function(response) {
+                        let parser = new DOMParser();
+                        let doc = parser.parseFromString(response.returned_text, "text/html");
+                        //console.log(doc);
+                        //console.log(doc.getElementsByClassName("RatingValue__Numerator-qw8sqy-2 liyUjw")[0].innerHTML)
+                        rating_div = doc.getElementsByClassName("RatingValue__Numerator-qw8sqy-2 liyUjw")[0];
+                        if(rating_div != undefined){
+                            profRating = rating_div.innerHTML;
+                        }else{
+                            profRating = -1;
+                        }
                         
-                    }
-                    /*if(savedClassIndex == allClasses.length - 1){
-                        console.log("Prof ratings length: " + profRatings.length);
-                        console.log("ProfRatings: " + profRatings);
-                        // Call function that takes in profRatings and sorts it, and then calls function to sort html divs 
-                        
-                    }*/
-                });
+                        //console.log("Class index: " + savedClassIndex);
+                        //addRatingToClass(allClasses[savedClassIndex], profRating);
+                        profRatings.push(profRating);
+                        //console.log("Added!")
+                        // idea: just check to see if profRatings size == allClasses.length, and if so then call function to sort profRatings with index, and then 
+                        // call function to switch html divs
+                        if(profRatings.length == allClasses.length - 1){
+                            console.log("Prof ratings length: " + profRatings.length);
+                            console.log("ProfRatings: " + profRatings);
+                            // Call function that takes in profRatings and sorts it, and then calls function to sort html divs 
+                            
+                        }
+                        /*if(savedClassIndex == allClasses.length - 1){
+                            console.log("Prof ratings length: " + profRatings.length);
+                            console.log("ProfRatings: " + profRatings);
+                            // Call function that takes in profRatings and sorts it, and then calls function to sort html divs 
+                            
+                        }*/
+                    });
+                }else{
+                    profRatings.push(-1);
+                }
+                
             }
             
             console.log(profRatings)
