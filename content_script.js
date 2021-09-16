@@ -6,10 +6,17 @@ function createObserver(target, profJson){
     
     return new MutationObserver(function(mutations) {
         mutations.forEach(function(mutation) {
+            //Promise.all(urls.DOMParser())
+            var url1 = "https://www.ratemyprofessors.com/ShowRatings.jsp?sid=1073&tid=2317111";
+            var url2 = "https://www.ratemyprofessors.com/ShowRatings.jsp?tid=786121";
+            chrome.runtime.sendMessage({urls: [url1, url2]}, function(response) {
+                console.log("Response: " + response.scores);
+            });
+            /*
             var allClasses = target.getElementsByClassName("data-item");
             var savedClassData = [];
             var profRatings = [];
-
+            var profTids = [];
             
             for(var classIndex = 0; classIndex < allClasses.length; classIndex++){
                 savedClassData.push(allClasses[classIndex].innerHTML);
@@ -17,12 +24,14 @@ function createObserver(target, profJson){
                 var profHrefs = allClasses[classIndex].getElementsByClassName("data-item-long active")[0].getElementsByClassName("float-left")[0].getElementsByClassName("clearfix")[0].getElementsByClassName("data-column")[4];
                 var profName = getProfessorName(profHrefs);
                 var profTid = getTid(profName, profJson);
-                var profScore = getProfRating(profTid);
                 
-                console.log("Professor score: " + profScore);
-                /*var profObj = {rating : profScore, classIndex : classIndex};
-                profRatings.push(profObj);*/
-            } 
+            }
+            
+            chrome.runtime.sendMessage({tid_array: profTids}, function(response){
+                console.log(response.returned_scores);
+            });*/
+
+            
             /*sortedClasses = sortRatings(profRatings);
             
             for(var classIndex = 0; classIndex < allClasses.length; classIndex++){
