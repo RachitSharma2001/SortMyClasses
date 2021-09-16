@@ -20,18 +20,34 @@ function createObserver(target, profJson){
                 var profTid = getTid(profName, profJson);
                 
                 const savedClassIndex = classIndex;
-                chrome.runtime.sendMessage({tid: "" + profTid}, function(response) {
+                chrome.runtime.sendMessage({tid: "" + profTid}, async function(response) {
                     let parser = new DOMParser();
                     let doc = parser.parseFromString(response.returned_text, "text/html");
                     //console.log(doc);
                     //console.log(doc.getElementsByClassName("RatingValue__Numerator-qw8sqy-2 liyUjw")[0].innerHTML)
                     profRating = doc.getElementsByClassName("RatingValue__Numerator-qw8sqy-2 liyUjw")[0].innerHTML;
-                    console.log("Class index: " + savedClassIndex);
-                    addRatingToClass(allClasses[savedClassIndex], profRating);
+                    //console.log("Class index: " + savedClassIndex);
+                    //addRatingToClass(allClasses[savedClassIndex], profRating);
+                    profRatings.push(profRating);
+                    //console.log("Added!")
+                    // idea: just check to see if profRatings size == allClasses.length, and if so then call function to sort profRatings with index, and then 
+                    // call function to switch html divs
+                    if(profRatings.length == allClasses.length - 1){
+                        console.log("Prof ratings length: " + profRatings.length);
+                        console.log("ProfRatings: " + profRatings);
+                        // Call function that takes in profRatings and sorts it, and then calls function to sort html divs 
+                        
+                    }
+                    /*if(savedClassIndex == allClasses.length - 1){
+                        console.log("Prof ratings length: " + profRatings.length);
+                        console.log("ProfRatings: " + profRatings);
+                        // Call function that takes in profRatings and sorts it, and then calls function to sort html divs 
+                        
+                    }*/
                 });
             }
             
-
+            console.log(profRatings)
             
             /*sortedClasses = sortRatings(profRatings);
             
@@ -41,6 +57,20 @@ function createObserver(target, profJson){
         });
     });
 }
+/*
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+async function until(condition) {
+    while (!fn()) {
+        await sleep(0)
+    }
+}
+async function myFunction(number) {
+    
+    await until(() => flag == true)
+}*/
 
 function addRatingToClass(givenClass, profRating){
     var clearfix = givenClass.getElementsByClassName("data-item-long active")[0].getElementsByClassName("float-left")[0].getElementsByClassName("clearfix")[0];
