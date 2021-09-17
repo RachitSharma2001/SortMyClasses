@@ -9,6 +9,88 @@
     });
 }*/
 
+function printProfRating(profRatings){
+    for(let classIndex = 0; classIndex < profRatings.length; classIndex++){
+        console.log("index, rating: " + profRatings[classIndex].classIndex + ", " + profRatings[classIndex].rating);
+    }
+}
+
+
+function hasRMPLink(profInnerHtml){
+    return profInnerHtml.includes("(<a href");
+}
+
+
+function addRatingToClass(givenClass, profRating){
+    var clearfix = givenClass.getElementsByClassName("data-item-long active")[0].getElementsByClassName("float-left")[0].getElementsByClassName("clearfix")[0];
+    var classRating = document.createElement("div");
+    classRating.innerHTML = '<p> Overall: ' + profRating + '</p>';
+    clearfix.appendChild(classRating);
+}
+
+function sortRatings(profRatings){
+    profRatings.sort(function compareProfs(profObjLeft, profObjRight){
+        if(profObjLeft.rating > profObjRight.rating){
+            return -1;
+        }
+        return 0;
+    });
+    return profRatings;
+}
+
+function sortClasses(profRatings){
+    return sortRatings(profRatings);
+}
+
+function changeHtmlOfRows(savedClassData, sortedClasses, htmlOfClassRows){
+    for(var classIndex = 0; classIndex < htmlOfClassRows.length; classIndex++){
+        htmlOfClassRows[classIndex].innerHTML = savedClassData[sortedClasses[classIndex].classIndex];
+    }
+    return htmlOfClassRows;
+}
+
+/* Assumes profInnerHtml contains an RMP Link */
+function getOnlyName(profInnerHtml){
+    return profInnerHtml.substring(0, profInnerHtml.indexOf("(<a href")-1);
+}
+
+/* Assumes that hasRMPLink of profInner Html is true*/
+function extractNameFromHtml(firstProf){
+    var givenProf = firstProf;
+    if(hasRMPLink(givenProf)){
+        givenProf = getOnlyName(givenProf);
+    }
+    return givenProf;
+}
+
+function getNameInFormat(profName){
+    return profName.replace(". ", "_");
+}
+
+
+function getProfessorName(profHrefs){
+    var profTags = profHrefs.getElementsByTagName("a");
+
+    /* Later, be able to return all the professors of a class
+    for(i = 0; i < profTags.length; i++){
+        var profName = profHrefs.getElementsByTagName("a")[i].innerHTML;
+        
+    }*/
+    if(profTags.length > 0){
+        var profName = extractNameFromHtml(profTags[0].innerHTML);
+        return getNameInFormat(profName);
+    }
+    return null;
+}
+
+function getTid(profName, profJson){
+    if(profName == null){
+        return -1;
+    }
+    var profNameInFormat = getNameInFormat(profName);
+    return profJson[profNameInFormat];
+}
+
 function sortCurrentClasses(target, profJson, TBA_RATING){
     console.log("New Mutation");
 
@@ -69,87 +151,6 @@ function sortByOverall(target, profJson, TBA_RATING){
     // target.getElementsByClassName("course-search-crn-title-container")[0].innerHtml += overallSort.innerHtml;
 }
 
-
-function printProfRating(profRatings){
-    for(let classIndex = 0; classIndex < profRatings.length; classIndex++){
-        console.log("index, rating: " + profRatings[classIndex].classIndex + ", " + profRatings[classIndex].rating);
-    }
-}
-
-
-function changeHtmlOfRows(savedClassData, sortedClasses, htmlOfClassRows){
-    for(var classIndex = 0; classIndex < htmlOfClassRows.length; classIndex++){
-        htmlOfClassRows[classIndex].innerHTML = savedClassData[sortedClasses[classIndex].classIndex];
-    }
-    return htmlOfClassRows;
-}
-
-function sortClasses(profRatings){
-    return sortRatings(profRatings);
-}
-
-function addRatingToClass(givenClass, profRating){
-    var clearfix = givenClass.getElementsByClassName("data-item-long active")[0].getElementsByClassName("float-left")[0].getElementsByClassName("clearfix")[0];
-    var classRating = document.createElement("div");
-    classRating.innerHTML = '<p> Overall: ' + profRating + '</p>';
-    clearfix.appendChild(classRating);
-}
-
-function sortRatings(profRatings){
-    profRatings.sort(function compareProfs(profObjLeft, profObjRight){
-        if(profObjLeft.rating > profObjRight.rating){
-            return -1;
-        }
-        return 0;
-    });
-    return profRatings;
-}
-
-function getTid(profName, profJson){
-    if(profName == null){
-        return -1;
-    }
-    var profNameInFormat = getNameInFormat(profName);
-    return profJson[profNameInFormat];
-}
-
-function getNameInFormat(profName){
-    return profName.replace(". ", "_");
-}
-
-function hasRMPLink(profInnerHtml){
-    return profInnerHtml.includes("(<a href");
-}
-
-/* Assumes profInnerHtml contains an RMP Link */
-function getOnlyName(profInnerHtml){
-    return profInnerHtml.substring(0, profInnerHtml.indexOf("(<a href")-1);
-}
-
-/* Assumes that hasRMPLink of profInner Html is true*/
-function extractNameFromHtml(firstProf){
-    var givenProf = firstProf;
-    if(hasRMPLink(givenProf)){
-        givenProf = getOnlyName(givenProf);
-    }
-    return givenProf;
-}
-
-function getProfessorName(profHrefs){
-    var profTags = profHrefs.getElementsByTagName("a");
-
-    /* Later, be able to return all the professors of a class
-    for(i = 0; i < profTags.length; i++){
-        var profName = profHrefs.getElementsByTagName("a")[i].innerHTML;
-        
-    }*/
-    if(profTags.length > 0){
-        var profName = extractNameFromHtml(profTags[0].innerHTML);
-        return getNameInFormat(profName);
-    }
-    return null;
-}
-
 const url = chrome.runtime.getURL('ProfTids.txt');
 fetch(url)
 .then((response) => response.json()) //assuming file contains json
@@ -176,5 +177,9 @@ fetch(url)
     4. Add a sort by easiest button 
     5. Make the buttons prettier 
     6. Clean up code
-
+        a. Split into classes?
+    7. Other:
+        a. make faster -> see if its the message passsing with background thats taking the most time or if its the fetching thats taking a bunch of time
+            i. If its message passing, see how to pass all the urls at once and get back all the ratings
+            ii. If its fetching, see how to fetch a bunch of urls at once quickly
 */
