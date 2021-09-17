@@ -1,52 +1,74 @@
 // Observe when DOM changes, meaning user searched for new classes
-function createObserver(target, profJson, TBA_RATING){
+/*function createObserver(target, profJson, TBA_RATING){
     return new MutationObserver(function(mutations) {
         mutations.forEach(function(mutation) {
-            console.log("New Mutation");
-
-            var allClasses = target.getElementsByClassName("data-item");
-            var savedClassData = [];
-            var profRatings = [];
-            var profTids = [];
-            
-            console.log("all classes length: " + allClasses.length);
-            for(var classIndex = 0; classIndex < allClasses.length; classIndex++){
-                savedClassData.push(allClasses[classIndex].innerHTML);
-                
-                var profHrefs = allClasses[classIndex].getElementsByClassName("data-item-long active")[0].getElementsByClassName("float-left")[0].getElementsByClassName("clearfix")[0].getElementsByClassName("data-column")[4];
-                var profName = getProfessorName(profHrefs);
-                var profTid = getTid(profName, profJson);
-                
-                if(profTid != -1){
-                    const savedClassIndex = classIndex
-                    chrome.runtime.sendMessage({tid: "" + profTid}, async function(response) {
-                        let parser = new DOMParser();
-                        let doc = parser.parseFromString(response.returned_text, "text/html");
-
-                        ratingDiv = doc.getElementsByClassName("RatingValue__Numerator-qw8sqy-2 liyUjw")[0];
-                        //console.log("Class index: " + savedClassIndex + ", prof rating: " + profRating);
-                        if(typeof ratingDiv === 'undefined'){
-                            profRating = TBA_RATING;
-                        }else{
-                            profRating = ratingDiv.innerHTML;
-                        }
-                        
-                        profRatings.push({rating : profRating, classIndex : savedClassIndex});
-                        if(profRatings.length == allClasses.length){
-                            profRatings = sortClasses(profRatings);
-                            allClasses = changeHtmlOfRows(savedClassData, profRatings, allClasses);
-                            console.log("Done, here are the sorted classes:");
-                            printProfRating(profRatings);
-                        }
-                    });
-                }else{
-                    profRatings.push({rating : TBA_RATING, classIndex : classIndex});
-                }
+           
                 
             }
         });
     });
+}*/
+
+function sortCurrentClasses(target, profJson, TBA_RATING){
+    console.log("New Mutation");
+
+    var allClasses = target.getElementsByClassName("data-item");
+    var savedClassData = [];
+    var profRatings = [];
+    var profTids = [];
+    
+    console.log("all classes length: " + allClasses.length);
+    for(var classIndex = 0; classIndex < allClasses.length; classIndex++){
+        savedClassData.push(allClasses[classIndex].innerHTML);
+        
+        var profHrefs = allClasses[classIndex].getElementsByClassName("data-item-long active")[0].getElementsByClassName("float-left")[0].getElementsByClassName("clearfix")[0].getElementsByClassName("data-column")[4];
+        var profName = getProfessorName(profHrefs);
+        var profTid = getTid(profName, profJson);
+        
+        if(profTid != -1){
+            const savedClassIndex = classIndex
+            chrome.runtime.sendMessage({tid: "" + profTid}, async function(response) {
+                let parser = new DOMParser();
+                let doc = parser.parseFromString(response.returned_text, "text/html");
+
+                ratingDiv = doc.getElementsByClassName("RatingValue__Numerator-qw8sqy-2 liyUjw")[0];
+                //console.log("Class index: " + savedClassIndex + ", prof rating: " + profRating);
+                if(typeof ratingDiv === 'undefined'){
+                    profRating = TBA_RATING;
+                }else{
+                    profRating = ratingDiv.innerHTML;
+                }
+                
+                profRatings.push({rating : profRating, classIndex : savedClassIndex});
+                if(profRatings.length == allClasses.length){
+                    profRatings = sortClasses(profRatings);
+                    allClasses = changeHtmlOfRows(savedClassData, profRatings, allClasses);
+                    console.log("Done, here are the sorted classes:");
+                    printProfRating(profRatings);
+                }
+            });
+        }else{
+            profRatings.push({rating : TBA_RATING, classIndex : classIndex});
+        }
+    }
 }
+
+function createButton(buttonInnerHtml){
+    var sortRatingButton = document.createElement('div');
+    sortRatingButton.innerHTML = '<button type = "button">' + buttonInnerHtml + '</button>';
+    return sortRatingButton;
+}
+
+/* Creates button prompting user to sort by overall rating, and then adds it to the user view (next to the search button) */
+function sortByOverall(target, profJson, TBA_RATING){
+    var overallSort = createButton('Sort by Overall Rating');
+    overallSort.onclick = () => {
+        sortCurrentClasses(target, profJson, TBA_RATING);
+    }
+    document.getElementsByClassName("course-search-crn-title-container")[0].appendChild(overallSort);
+    // target.getElementsByClassName("course-search-crn-title-container")[0].innerHtml += overallSort.innerHtml;
+}
+
 
 function printProfRating(profRatings){
     for(let classIndex = 0; classIndex < profRatings.length; classIndex++){
@@ -129,10 +151,12 @@ function getProfessorName(profHrefs){
 }
 
 function detectSearchChange(profJson){
-    var genericConfig = { attributes: true, childList: true, characterData: true };
+    /*var genericConfig = { attributes: true, childList: true, characterData: true };
     var inlineTarget = document.getElementById("inlineCourseResultsDiv");
     var inlineObserver = createObserver(inlineTarget, profJson, -1);
-    inlineObserver.observe(inlineTarget, genericConfig);
+    inlineObserver.observe(inlineTarget, genericConfig);*/
+    var inlineTarget = document.getElementById("inlineCourseResultsDiv");
+    sortByOverall(inlineTarget, profJson, -1);
 }
 
 const url = chrome.runtime.getURL('ProfTids.txt');
