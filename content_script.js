@@ -1,15 +1,15 @@
 // Observe when DOM changes, meaning user searched for new classes
 function createObserver(target, profJson, TBA_RATING){
-    console.log("Prof Json: " + profJson + " " + profJson["E_Fuchs"]);
-    
     return new MutationObserver(function(mutations) {
         mutations.forEach(function(mutation) {
-            
+            console.log("New Mutation");
+
             var allClasses = target.getElementsByClassName("data-item");
             var savedClassData = [];
             var profRatings = [];
             var profTids = [];
             
+            console.log("all classes length: " + allClasses.length);
             for(var classIndex = 0; classIndex < allClasses.length; classIndex++){
                 savedClassData.push(allClasses[classIndex].innerHTML);
                 
@@ -22,28 +22,21 @@ function createObserver(target, profJson, TBA_RATING){
                     chrome.runtime.sendMessage({tid: "" + profTid}, async function(response) {
                         let parser = new DOMParser();
                         let doc = parser.parseFromString(response.returned_text, "text/html");
-                        //console.log(doc);
-                        //console.log(doc.getElementsByClassName("RatingValue__Numerator-qw8sqy-2 liyUjw")[0].innerHTML)
-                        rating_div = doc.getElementsByClassName("RatingValue__Numerator-qw8sqy-2 liyUjw")[0];
-                        if(rating_div != undefined){
-                            profRating = rating_div.innerHTML;
+
+                        ratingDiv = doc.getElementsByClassName("RatingValue__Numerator-qw8sqy-2 liyUjw")[0];
+                        //console.log("Class index: " + savedClassIndex + ", prof rating: " + profRating);
+                        if(typeof ratingDiv === 'undefined'){
+                            profRating = TBA_RATING;
                         }else{
-                            profRating = -1;
+                            profRating = ratingDiv.innerHTML;
                         }
                         
-                        //console.log("Class index: " + savedClassIndex);
-                        //addRatingToClass(allClasses[savedClassIndex], profRating);
                         profRatings.push({rating : profRating, classIndex : savedClassIndex});
-                        //console.log("Added!")
-                        // idea: just check to see if profRatings size == allClasses.length, and if so then call function to sort profRatings with index, and then 
-                        // call function to switch html divs
                         if(profRatings.length == allClasses.length){
-                            console.log("Prof ratings length: " + profRatings.length);
                             profRatings = sortClasses(profRatings);
-                            allClasses = changeHtmlOfRows(savedClassData, sortedClasses, allClasses);
-                            //console.log("ProfRatings: " + profRatings);
-                            // Call function that takes in profRatings and sorts it, and then calls function to sort html divs 
-                            
+                            allClasses = changeHtmlOfRows(savedClassData, profRatings, allClasses);
+                            console.log("Done, here are the sorted classes:");
+                            printProfRating(profRatings);
                         }
                     });
                 }else{
@@ -51,18 +44,16 @@ function createObserver(target, profJson, TBA_RATING){
                 }
                 
             }
-            
-            console.log(profRatings)
-            
-            sortedClasses = sortRatings(profRatings);
-            
-            for(var classIndex = 0; classIndex < allClasses.length; classIndex++){
-                console.log(sortedClasses[classIndex])
-                //allClasses[classIndex].innerHTML = savedClassData[sortedClasses[classIndex].classIndex];
-            }
         });
     });
 }
+
+function printProfRating(profRatings){
+    for(let classIndex = 0; classIndex < profRatings.length; classIndex++){
+        console.log("index, rating: " + profRatings[classIndex].classIndex + ", " + profRatings[classIndex].rating);
+    }
+}
+
 
 function changeHtmlOfRows(savedClassData, sortedClasses, htmlOfClassRows){
     for(var classIndex = 0; classIndex < htmlOfClassRows.length; classIndex++){
@@ -75,21 +66,6 @@ function sortClasses(profRatings){
     return sortRatings(profRatings);
 }
 
-/*
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms))
-}
-
-async function until(condition) {
-    while (!fn()) {
-        await sleep(0)
-    }
-}
-async function myFunction(number) {
-    
-    await until(() => flag == true)
-}*/
-
 function addRatingToClass(givenClass, profRating){
     var clearfix = givenClass.getElementsByClassName("data-item-long active")[0].getElementsByClassName("float-left")[0].getElementsByClassName("clearfix")[0];
     var classRating = document.createElement("div");
@@ -99,34 +75,12 @@ function addRatingToClass(givenClass, profRating){
 
 function sortRatings(profRatings){
     profRatings.sort(function compareProfs(profObjLeft, profObjRight){
-        console.log("Left, right rating: " + profObjLeft.rating + ", " + profObjRight.rating);
-        console.log("Left, right class index: " + profObjLeft.classIndex + ", " + profObjRight.classIndex);
-
         if(profObjLeft.rating > profObjRight.rating){
             return -1;
         }
         return 0;
     });
     return profRatings;
-}
-
-function getProfRating(profTid){
-    if(profTid == -1){
-        return TBA_RATING;
-    }
-    var profRating = -1;
-    chrome.runtime.sendMessage({tid: "" + profTid}, function(response) {
-        let parser = new DOMParser();
-        let doc = parser.parseFromString(response.returned_text, "text/html");
-        console.log(doc);
-        console.log(doc.getElementsByClassName("RatingValue__Numerator-qw8sqy-2 liyUjw")[0].innerHTML)
-        profRating = doc.getElementsByClassName("RatingValue__Numerator-qw8sqy-2 liyUjw")[0].innerHTML;
-    });
-    /*if(profRating == -1){
-        setTimeout(getProfRating, 300);
-    }else{
-        return profRating;
-    }*/
 }
 
 function getTid(profName, profJson){
@@ -177,7 +131,7 @@ function getProfessorName(profHrefs){
 function detectSearchChange(profJson){
     var genericConfig = { attributes: true, childList: true, characterData: true };
     var inlineTarget = document.getElementById("inlineCourseResultsDiv");
-    var inlineObserver = createObserver(inlineTarget, profJson);
+    var inlineObserver = createObserver(inlineTarget, profJson, -1);
     inlineObserver.observe(inlineTarget, genericConfig);
 }
 
@@ -191,7 +145,6 @@ fetch(url)
             var rating_header = document.createElement("div");
             rating_header.innerHTML = '<div class="data-column column-header align-left" style="width:18%;"> Ratings </div>';
             document.getElementById("inlineCourseResultsContainer").getElementsByClassName("data-container-header")[0].getElementsByClassName("data-header-long data-row clearfix")[0].getElementsByClassName("float-left").appendChild(rating_header);
-
 */
 
 
@@ -201,13 +154,11 @@ chrome.runtime.sendMessage({tid: "786121"}, function(response) {
     const doc = parser.parseFromString(response.returned_text, "text/html");
     console.log(doc.getElementsByClassName("RatingValue__Numerator-qw8sqy-2 liyUjw")[0].innerHTML);
   });
-
   chrome.runtime.sendMessage({tid: "2585755"}, function(response) {
     const parser = new DOMParser();
     const doc = parser.parseFromString(response.returned_text, "text/html");
     console.log(doc.getElementsByClassName("RatingValue__Numerator-qw8sqy-2 liyUjw")[0].innerHTML);
   });
-
   chrome.runtime.sendMessage({tid: "2503455"}, function(response) {
     const parser = new DOMParser();
     const doc = parser.parseFromString(response.returned_text, "text/html");
