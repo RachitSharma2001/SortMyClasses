@@ -9,6 +9,7 @@
     });
 }*/
 
+/* Functions not used yet */
 function printProfRating(profRatings){
     for(let classIndex = 0; classIndex < profRatings.length; classIndex++){
         console.log("index, rating: " + profRatings[classIndex].classIndex + ", " + profRatings[classIndex].rating);
@@ -28,6 +29,7 @@ function addRatingToClass(givenClass, profRating){
     clearfix.appendChild(classRating);
 }
 
+/* Function currently used */
 function sortRatings(profRatings){
     profRatings.sort(function compareProfs(profObjLeft, profObjRight){
         if(profObjLeft.rating > profObjRight.rating){
