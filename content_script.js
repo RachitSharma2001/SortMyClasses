@@ -1,7 +1,5 @@
-var TBA_RATING = 6;
-
 // Observe when DOM changes, meaning user searched for new classes
-function createObserver(target, profJson){
+function createObserver(target, profJson, TBA_RATING){
     console.log("Prof Json: " + profJson + " " + profJson["E_Fuchs"]);
     
     return new MutationObserver(function(mutations) {
@@ -20,6 +18,7 @@ function createObserver(target, profJson){
                 var profTid = getTid(profName, profJson);
                 
                 if(profTid != -1){
+                    const savedClassIndex = classIndex
                     chrome.runtime.sendMessage({tid: "" + profTid}, async function(response) {
                         let parser = new DOMParser();
                         let doc = parser.parseFromString(response.returned_text, "text/html");
@@ -34,39 +33,48 @@ function createObserver(target, profJson){
                         
                         //console.log("Class index: " + savedClassIndex);
                         //addRatingToClass(allClasses[savedClassIndex], profRating);
-                        profRatings.push(profRating);
+                        profRatings.push({rating : profRating, classIndex : savedClassIndex});
                         //console.log("Added!")
                         // idea: just check to see if profRatings size == allClasses.length, and if so then call function to sort profRatings with index, and then 
                         // call function to switch html divs
-                        if(profRatings.length == allClasses.length - 1){
+                        if(profRatings.length == allClasses.length){
                             console.log("Prof ratings length: " + profRatings.length);
-                            console.log("ProfRatings: " + profRatings);
+                            profRatings = sortClasses(profRatings);
+                            allClasses = changeHtmlOfRows(savedClassData, sortedClasses, allClasses);
+                            //console.log("ProfRatings: " + profRatings);
                             // Call function that takes in profRatings and sorts it, and then calls function to sort html divs 
                             
                         }
-                        /*if(savedClassIndex == allClasses.length - 1){
-                            console.log("Prof ratings length: " + profRatings.length);
-                            console.log("ProfRatings: " + profRatings);
-                            // Call function that takes in profRatings and sorts it, and then calls function to sort html divs 
-                            
-                        }*/
                     });
                 }else{
-                    profRatings.push(-1);
+                    profRatings.push({rating : TBA_RATING, classIndex : classIndex});
                 }
                 
             }
             
             console.log(profRatings)
             
-            /*sortedClasses = sortRatings(profRatings);
+            sortedClasses = sortRatings(profRatings);
             
             for(var classIndex = 0; classIndex < allClasses.length; classIndex++){
-                allClasses[classIndex].innerHTML= savedClassData[sortedClasses[classIndex].classIndex];
-            }*/
+                console.log(sortedClasses[classIndex])
+                //allClasses[classIndex].innerHTML = savedClassData[sortedClasses[classIndex].classIndex];
+            }
         });
     });
 }
+
+function changeHtmlOfRows(savedClassData, sortedClasses, htmlOfClassRows){
+    for(var classIndex = 0; classIndex < htmlOfClassRows.length; classIndex++){
+        htmlOfClassRows[classIndex].innerHTML = savedClassData[sortedClasses[classIndex].classIndex];
+    }
+    return htmlOfClassRows;
+}
+
+function sortClasses(profRatings){
+    return sortRatings(profRatings);
+}
+
 /*
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms))
@@ -94,7 +102,7 @@ function sortRatings(profRatings){
         console.log("Left, right rating: " + profObjLeft.rating + ", " + profObjRight.rating);
         console.log("Left, right class index: " + profObjLeft.classIndex + ", " + profObjRight.classIndex);
 
-        if(profObjLeft.rating < profObjRight.rating){
+        if(profObjLeft.rating > profObjRight.rating){
             return -1;
         }
         return 0;
