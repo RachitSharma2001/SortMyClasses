@@ -150,42 +150,31 @@ function getProfessorName(profHrefs){
     return null;
 }
 
-function detectSearchChange(profJson){
-    /*var genericConfig = { attributes: true, childList: true, characterData: true };
-    var inlineTarget = document.getElementById("inlineCourseResultsDiv");
-    var inlineObserver = createObserver(inlineTarget, profJson, -1);
-    inlineObserver.observe(inlineTarget, genericConfig);*/
-    var inlineTarget = document.getElementById("inlineCourseResultsDiv");
-    sortByOverall(inlineTarget, profJson, -1);
-}
-
 const url = chrome.runtime.getURL('ProfTids.txt');
 fetch(url)
 .then((response) => response.json()) //assuming file contains json
-.then((json) => detectSearchChange(json));
+.then((profJson) => {
+    var inlineTarget = document.getElementById("inlineCourseResultsDiv");
+    sortByOverall(inlineTarget, profJson, -1);
+    /* Do something to detect when add/search courses button clicked so that you can then sort the classes in that popup*/
+});
 
-/*
-// Add Rating header
-            var rating_header = document.createElement("div");
-            rating_header.innerHTML = '<div class="data-column column-header align-left" style="width:18%;"> Ratings </div>';
-            document.getElementById("inlineCourseResultsContainer").getElementsByClassName("data-container-header")[0].getElementsByClassName("data-header-long data-row clearfix")[0].getElementsByClassName("float-left").appendChild(rating_header);
-*/
+/* 
+    TODO:
+    1. Add button to sort by overall rating in the advanced search options
+        a. We need to figure out what exackly gets added to the DOM tree when we click add/search courses
+        b. What I know so far is that all of the buttons(Close, Clear, Search) and the advanced course options actually exist even when the added/search courses button is 
+        not clicked
+        c. So when the add/search courses button is clicked, somehow those go from invisible to visible
+        d. There are actually no changes to the DOM tree when the add/search courses button is clicked (we've tested this with mutation observer)
+        e. So how do we detect when that button is clicked -> essentially, how do we detect when all those things that are defined for the popup (close, search, advanced options) 
+        go from invisible to visible?
+        f. Search up how to do this in js
+    2. Add functionality that detects if user clicked search button after clicked our button to sort classes (so that we can stop the process and prevent schedule builder 
+        from crashing)
+    3. Add a loading bar that moves until the classes are loaded (copy their code for when they load -> they have a loading circle on the search button)
+    4. Add a sort by easiest button 
+    5. Make the buttons prettier 
+    6. Clean up code
 
-
-/* Getting Professor Rating
-chrome.runtime.sendMessage({tid: "786121"}, function(response) {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(response.returned_text, "text/html");
-    console.log(doc.getElementsByClassName("RatingValue__Numerator-qw8sqy-2 liyUjw")[0].innerHTML);
-  });
-  chrome.runtime.sendMessage({tid: "2585755"}, function(response) {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(response.returned_text, "text/html");
-    console.log(doc.getElementsByClassName("RatingValue__Numerator-qw8sqy-2 liyUjw")[0].innerHTML);
-  });
-  chrome.runtime.sendMessage({tid: "2503455"}, function(response) {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(response.returned_text, "text/html");
-    console.log(doc.getElementsByClassName("RatingValue__Numerator-qw8sqy-2 liyUjw")[0].innerHTML);
-  });
 */

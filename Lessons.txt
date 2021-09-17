@@ -1,0 +1,2 @@
+1. Whenever you have a potential solution, but it seems "icky" or with code that you will have to figure out (meaning you are unfamiliar with it) you still need to 
+muster the energy to try to play with it and try to get it working. That is so important in making tough applications.
