@@ -187,23 +187,13 @@ fetch(url)
 
 /* 
     TODO:
-    1. Add button to sort by overall rating in the advanced search options
-        a. We need to figure out what exackly gets added to the DOM tree when we click add/search courses
-        b. What I know so far is that all of the buttons(Close, Clear, Search) and the advanced course options actually exist even when the added/search courses button is 
-        not clicked
-        c. So when the add/search courses button is clicked, somehow those go from invisible to visible
-        d. There are actually no changes to the DOM tree when the add/search courses button is clicked (we've tested this with mutation observer)
-        e. So how do we detect when that button is clicked -> essentially, how do we detect when all those things that are defined for the popup (close, search, advanced options) 
-        go from invisible to visible?
-        f. Search up how to do this in js
-    2. Add functionality that detects if user clicked search button after clicked our button to sort classes (so that we can stop the process and prevent schedule builder 
-        from crashing)
-    3. Add a loading bar that moves until the classes are loaded (copy their code for when they load -> they have a loading circle on the search button)
-    4. Add a sort by easiest button 
-    5. Make the buttons prettier 
-    6. Clean up code
+    1. Add a loading bar that moves until the classes are loaded (copy their code for when they load -> they have a loading circle on the search button)
+    2. Add a sort by easiest button 
+    3. Make the buttons prettier 
+    4 Handle case when mulitple professors
+    5. Clean up code
         a. Split into classes?
-    7. Other:
+    6. Other:
         a. make faster -> see if its the message passsing with background thats taking the most time or if its the fetching thats taking a bunch of time
             i. If its message passing, see how to pass all the urls at once and get back all the ratings
             ii. If its fetching, see how to fetch a bunch of urls at once quickly
