@@ -153,14 +153,29 @@ function sortByOverall(target, profJson, TBA_RATING){
     // target.getElementsByClassName("course-search-crn-title-container")[0].innerHtml += overallSort.innerHtml;
 }
 
+/*
 const url = chrome.runtime.getURL('ProfTids.txt');
 fetch(url)
 .then((response) => response.json()) //assuming file contains json
 .then((profJson) => {
     var inlineTarget = document.getElementById("inlineCourseResultsDiv");
     sortByOverall(inlineTarget, profJson, -1);
-    /* Do something to detect when add/search courses button clicked so that you can then sort the classes in that popup*/
-});
+    document.getEle
+});*/
+
+var buttonDiv = createButton("It worked!");
+document.getElementById("CoursesSearch").getElementsByClassName("modal-body")[0].getElementsByClassName("course-search-container")[0].getElementsByClassName("align-center")[0].innerHTML += buttonDiv.innerHTML;
+
+// <button type="button" class="btn btn-primary" onclick=
+
+/*
+    We want to insert the sort button into:
+        <div class="modal-footer align-center">
+			<button type="button"  class="btn closer btn-close">Close</button>
+			<button type="button" class="btn btn-clear" onClick="javascript:UCD.SAOT.COURSES_SEARCH.clearFilters();">Clear</button>
+			<button type="button" class="btn btn-primary" onClick="javascript:UCD.SAOT.COURSES_SEARCH.textSearch();">Search</button>
+	    </div>
+*/
 
 /* 
     TODO:
