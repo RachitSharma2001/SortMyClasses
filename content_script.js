@@ -144,27 +144,35 @@ function createButton(buttonInnerHtml){
 }
 
 /* Creates button prompting user to sort by overall rating, and then adds it to the user view (next to the search button) */
-function sortByOverall(target, profJson, TBA_RATING){
+function createSortingButton(target, profJson, TBA_RATING){
     var overallSort = createButton('Sort by Overall Rating');
     overallSort.onclick = () => {
         sortCurrentClasses(target, profJson, TBA_RATING);
     }
-    document.getElementsByClassName("course-search-crn-title-container")[0].appendChild(overallSort);
+    return overallSort;
+    //document.getElementsByClassName("course-search-crn-title-container")[0].appendChild(overallSort);
     // target.getElementsByClassName("course-search-crn-title-container")[0].innerHtml += overallSort.innerHtml;
 }
 
-/*
+function addToView(parentDiv, buttonDiv){
+    parentDiv.appendChild(buttonDiv);
+}
+
 const url = chrome.runtime.getURL('ProfTids.txt');
 fetch(url)
 .then((response) => response.json()) //assuming file contains json
 .then((profJson) => {
     var inlineTarget = document.getElementById("inlineCourseResultsDiv");
-    sortByOverall(inlineTarget, profJson, -1);
-    document.getEle
-});*/
+    var inlineSort = createSortingButton(inlineTarget, profJson, -1);
+    addToView(document.getElementsByClassName("course-search-crn-title-container")[0], inlineSort)
 
-var buttonDiv = createButton("It worked!");
-document.getElementById("CoursesSearch").getElementsByClassName("modal-body")[0].getElementsByClassName("course-search-container")[0].getElementsByClassName("align-center")[0].innerHTML += buttonDiv.innerHTML;
+    var outlineTarget = document.getElementById("courseResultsDiv");
+    var outlineSort = createSortingButton(outlineTarget, profJson, -1);
+    addToView(document.getElementById("CoursesSearch").getElementsByClassName("modal-body")[0].getElementsByClassName("course-search-container")[0].getElementsByClassName("align-center")[0], outlineSort)
+});
+
+//var buttonDiv = createButton("It worked!");
+//document.getElementById("CoursesSearch").getElementsByClassName("modal-body")[0].getElementsByClassName("course-search-container")[0].getElementsByClassName("align-center")[0].innerHTML += buttonDiv.innerHTML;
 
 // <button type="button" class="btn btn-primary" onclick=
 
