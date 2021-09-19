@@ -51,6 +51,10 @@ function changeHtmlOfRows(savedClassData, sortedClasses, htmlOfClassRows){
     return htmlOfClassRows;
 }
 
+function changeHtmlOfDiv(div, html){
+    div.innerHTML = html;
+}
+
 /* Assumes profInnerHtml contains an RMP Link */
 function getOnlyName(profInnerHtml){
     return profInnerHtml.substring(0, profInnerHtml.indexOf("(<a href")-1);
@@ -93,14 +97,16 @@ function getTid(profName, profJson){
     return profJson[profNameInFormat];
 }
 
-function sortCurrentClasses(target, profJson, TBA_RATING){
-    console.log("New Mutation");
+function sortCurrentClasses(target, profJson, TBA_RATING, sortButton){
 
     var allClasses = target.getElementsByClassName("data-item");
     var savedClassData = [];
     var profRatings = [];
     var profTids = [];
-    
+
+    var origButtonHtml = sortButton.innerHTML;
+    changeHtmlOfDiv(sortButton, "Loading...");
+
     console.log("all classes length: " + allClasses.length);
     for(var classIndex = 0; classIndex < allClasses.length; classIndex++){
         savedClassData.push(allClasses[classIndex].innerHTML);
@@ -127,6 +133,7 @@ function sortCurrentClasses(target, profJson, TBA_RATING){
                 if(profRatings.length == allClasses.length){
                     profRatings = sortClasses(profRatings);
                     allClasses = changeHtmlOfRows(savedClassData, profRatings, allClasses);
+                    changeHtmlOfDiv(sortButton, origButtonHtml);
                     console.log("Done, here are the sorted classes:");
                     printProfRating(profRatings);
                 }
@@ -144,14 +151,28 @@ function createButton(buttonInnerHtml){
 }
 
 /* Creates button prompting user to sort by overall rating, and then adds it to the user view (next to the search button) */
-function createSortingButton(target, profJson, TBA_RATING){
-    var overallSort = createButton('Sort by Overall Rating');
+function createSortingButton(sortByText, target, profJson, TBA_RATING){
+    var overallSort = createButton(sortByText);
     overallSort.onclick = () => {
-        sortCurrentClasses(target, profJson, TBA_RATING);
+        sortCurrentClasses(target, profJson, TBA_RATING, overallSort);
     }
     return overallSort;
     //document.getElementsByClassName("course-search-crn-title-container")[0].appendChild(overallSort);
     // target.getElementsByClassName("course-search-crn-title-container")[0].innerHtml += overallSort.innerHtml;
+}
+
+function createObserver(sortingButton, origHtml){
+    return new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            changeHtmlOfDiv(sortingButton, origHtml);
+        });
+    });
+}
+
+function detectDomChange(target, sortingButton){
+    var config = { attributes: true, childList: true, characterData: true };
+    var observer = createObserver(sortingButton, sortingButton.innerHTML);
+    observer.observe(target, config);
 }
 
 function addToView(parentDiv, buttonDiv){
@@ -163,11 +184,13 @@ fetch(url)
 .then((response) => response.json()) //assuming file contains json
 .then((profJson) => {
     var inlineTarget = document.getElementById("inlineCourseResultsDiv");
-    var inlineSort = createSortingButton(inlineTarget, profJson, -1);
+    var inlineSort = createSortingButton("Sort By Overall Rating", inlineTarget, profJson, -1);
+    detectDomChange(inlineTarget, inlineSort);
     addToView(document.getElementsByClassName("course-search-crn-title-container")[0], inlineSort)
 
     var outlineTarget = document.getElementById("courseResultsDiv");
-    var outlineSort = createSortingButton(outlineTarget, profJson, -1);
+    var outlineSort = createSortingButton("Sort by Overall Rating", outlineTarget, profJson, -1);
+    detectDomChange(outlineTarget, outlineSort);
     addToView(document.getElementById("CoursesSearch").getElementsByClassName("modal-body")[0].getElementsByClassName("course-search-container")[0].getElementsByClassName("align-center")[0], outlineSort)
 });
 
@@ -187,12 +210,13 @@ fetch(url)
 
 /* 
     TODO:
-    1. Add a loading bar that moves until the classes are loaded (copy their code for when they load -> they have a loading circle on the search button)
+    1. Add a click listener to the search buttons in order to reset html of sorting button
     2. Add a sort by easiest button 
     3. Make the buttons prettier 
     4 Handle case when mulitple professors
     5. Clean up code
         a. Split into classes?
+        b. Search up google chrome extension projects and see how they are organized
     6. Other:
         a. make faster -> see if its the message passsing with background thats taking the most time or if its the fetching thats taking a bunch of time
             i. If its message passing, see how to pass all the urls at once and get back all the ratings
