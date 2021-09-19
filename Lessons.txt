@@ -1,2 +1,9 @@
 1. Whenever you have a potential solution, but it seems "icky" or with code that you will have to figure out (meaning you are unfamiliar with it) you still need to 
 muster the energy to try to play with it and try to get it working. That is so important in making tough applications.
+    a. This is exackly the kind of cool backend applications that are fun to build -> these hard to figure out, hard to implement programs. These are what makes 
+    programming fun, so don't shy away from them just because its in an unfamiliar programming territory or it seems hard. Learning to implement these hard backend 
+    applications, where the logic of the programs are unclear, is what will make you a really good programmer. 
+    b. You can't just like to program the easy things. You need to love to program the really hard (in terms of algorithm logic, or in terms of unfamiliarity, etc) things.
+    c. For example, figuring out how to use promises to send all urls at once to RMP in order to speed up program, or figuring out how to deal with multiple profs in a class, or
+    figuring out how to only send for the url of a professor once even if prof appears multiple times(teaches multiple classes)
+2. When you have too many functions, you need to split into classes early, or else your code will just be a mess of a bunch of functions

@@ -97,8 +97,16 @@ function getTid(profName, profJson){
     return profJson[profNameInFormat];
 }
 
-function sortCurrentClasses(target, profJson, TBA_RATING, sortButton){
+/* Scrapes from RMP */
+function scrapeOverallRating(doc){
+    return doc.getElementsByClassName("RatingValue__Numerator-qw8sqy-2 liyUjw")[0];
+}
 
+function scrapeDifficultyRating(doc){
+    return doc.getElementsByClassName("FeedbackItem__FeedbackNumber-uof32n-1 kkESWs")[1];
+}
+
+function sortCurrentClasses(target, profJson, TBA_RATING, sortByOverall, sortButton){
     var allClasses = target.getElementsByClassName("data-item");
     var savedClassData = [];
     var profRatings = [];
@@ -107,7 +115,7 @@ function sortCurrentClasses(target, profJson, TBA_RATING, sortButton){
     var origButtonHtml = sortButton.innerHTML;
     changeHtmlOfDiv(sortButton, "Loading...");
 
-    console.log("all classes length: " + allClasses.length);
+    console.log("What is sort by overall: " + sortByOverall);
     for(var classIndex = 0; classIndex < allClasses.length; classIndex++){
         savedClassData.push(allClasses[classIndex].innerHTML);
         
@@ -121,12 +129,20 @@ function sortCurrentClasses(target, profJson, TBA_RATING, sortButton){
                 let parser = new DOMParser();
                 let doc = parser.parseFromString(response.returned_text, "text/html");
 
-                ratingDiv = doc.getElementsByClassName("RatingValue__Numerator-qw8sqy-2 liyUjw")[0];
-                //console.log("Class index: " + savedClassIndex + ", prof rating: " + profRating);
+                var ratingDiv = null;
+                if(sortByOverall){
+                    ratingDiv = scrapeOverallRating(doc);
+                    console.log("Sorting by Overall");
+                }else{
+                    ratingDiv = scrapeDifficultyRating(doc);
+                    console.log("Sorting by Difficulty");
+                } 
+
                 if(typeof ratingDiv === 'undefined'){
                     profRating = TBA_RATING;
                 }else{
                     profRating = ratingDiv.innerHTML;
+                    console.log("Rating Divs inner html: " + ratingDiv.innerHTML);
                 }
                 
                 profRatings.push({rating : profRating, classIndex : savedClassIndex});
@@ -151,47 +167,49 @@ function createButton(buttonInnerHtml){
 }
 
 /* Creates button prompting user to sort by overall rating, and then adds it to the user view (next to the search button) */
-function createSortingButton(sortByText, target, profJson, TBA_RATING){
+function createSortingButton(sortByText, target, profJson, TBA_RATING, sortByOverall){
     var overallSort = createButton(sortByText);
     overallSort.onclick = () => {
-        sortCurrentClasses(target, profJson, TBA_RATING, overallSort);
+        sortCurrentClasses(target, profJson, TBA_RATING, sortByOverall, overallSort);
     }
     return overallSort;
-    //document.getElementsByClassName("course-search-crn-title-container")[0].appendChild(overallSort);
-    // target.getElementsByClassName("course-search-crn-title-container")[0].innerHtml += overallSort.innerHtml;
 }
 
-function createObserver(sortingButton, origHtml){
+function createObserver(sortingButtonOverall, sortingButtonDifficulty, origOverallHtml, origDiffHtml){
     return new MutationObserver(function(mutations) {
         mutations.forEach(function(mutation) {
-            changeHtmlOfDiv(sortingButton, origHtml);
+            changeHtmlOfDiv(sortingButtonOverall, origOverallHtml);
+            changeHtmlOfDiv(sortingButtonDifficulty, origDiffHtml);
         });
     });
 }
 
-function detectDomChange(target, sortingButton){
+function detectDomChange(target, sortingButtonOverall, sortingButtonDifficulty){
     var config = { attributes: true, childList: true, characterData: true };
-    var observer = createObserver(sortingButton, sortingButton.innerHTML);
+    var observer = createObserver(sortingButtonOverall, sortingButtonDifficulty, sortingButtonOverall.innerHTML, sortingButtonDifficulty.innerHTML);
     observer.observe(target, config);
 }
 
-function addToView(parentDiv, buttonDiv){
-    parentDiv.appendChild(buttonDiv);
+function addToView(parentDiv, overallSortDiv, diffSortDiv){
+    parentDiv.appendChild(overallSortDiv);
+    parentDiv.appendChild(diffSortDiv);
 }
 
 const url = chrome.runtime.getURL('ProfTids.txt');
 fetch(url)
-.then((response) => response.json()) //assuming file contains json
+.then((response) => response.json())
 .then((profJson) => {
     var inlineTarget = document.getElementById("inlineCourseResultsDiv");
-    var inlineSort = createSortingButton("Sort By Overall Rating", inlineTarget, profJson, -1);
-    detectDomChange(inlineTarget, inlineSort);
-    addToView(document.getElementsByClassName("course-search-crn-title-container")[0], inlineSort)
+    var inlineSortOverall = createSortingButton("Sort By Overall Rating", inlineTarget, profJson, -1, true);
+    var inlineSortDifficulty = createSortingButton("Sort by Difficulty", inlineTarget, profJson, -1, false);
+    detectDomChange(inlineTarget, inlineSortOverall, inlineSortDifficulty);
+    addToView(document.getElementsByClassName("course-search-crn-title-container")[0], inlineSortOverall, inlineSortDifficulty);
 
-    var outlineTarget = document.getElementById("courseResultsDiv");
+    /*var outlineTarget = document.getElementById("courseResultsDiv");
     var outlineSort = createSortingButton("Sort by Overall Rating", outlineTarget, profJson, -1);
     detectDomChange(outlineTarget, outlineSort);
     addToView(document.getElementById("CoursesSearch").getElementsByClassName("modal-body")[0].getElementsByClassName("course-search-container")[0].getElementsByClassName("align-center")[0], outlineSort)
+    */
 });
 
 //var buttonDiv = createButton("It worked!");
@@ -208,9 +226,10 @@ fetch(url)
 	    </div>
 */
 
+
+
 /* 
     TODO:
-    1. Add a click listener to the search buttons in order to reset html of sorting button
     2. Add a sort by easiest button 
     3. Make the buttons prettier 
     4 Handle case when mulitple professors
