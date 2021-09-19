@@ -274,9 +274,16 @@ fetch(url)
 /* 
     TODO:
     2. Fix weird bug
-    2.5 MAke it so that if overall is clicked, and difficulty was still loading, then difficulty gets set back to regular button
-    3. Make the buttons prettier
-        a. Make them in horizontal, not vertical format
+        a. What we want to do is create a Ratings class that gets the ratings right when the dom changes (meaning a new class search occurs) or one of the buttons is clicked 
+        for the first time since the dom changed. This is so that we never have to call fetch a second time (which is what causes our bug)
+        b. Details on bug
+            a. The bug is that, when we call fetch a second time after we dom changes, fetch returns an html that isn't really the html of the ratings page of that 
+            professor, so we can't scrape for difficulty or overall ratings since that is not in that html (the returned html has 45 kb on second time compared to 
+                250 the first time)
+            b. I'm not sure the reason for this. It may be that when dom changes and page is reloaded, somehow there is something that changes that allows fetch to be called
+            again.
+            c. Or maybe when we call fetch the first time it never actually finished, so during the second time it returns teh last bit that wasn't finished from teh first time
+            d. So maybe we should analyze more the 45 kb html that is returned the second time fetch is called. 
     4. Submit to chrome 
     4 Handle case when mulitple professors
     5. Clean up code
