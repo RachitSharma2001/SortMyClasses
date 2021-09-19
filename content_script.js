@@ -9,6 +9,33 @@
     });
 }*/
 
+class Ratings{
+    constructor(){
+        this.hasRatings = false;
+        this.overallRatings = null;
+        this.diffRatings = null;
+    }
+
+    hasRatings(){
+        return this.hasRatings;
+    }
+
+    updateHasRatings(){
+        this.hasRatings = true;
+    }
+
+    getRatings(allClasses){
+        this.overallRatings = [];
+        this.diffRatings = [];
+        for(var classIndex = 0; classIndex < allClasses.length; classIndex++){
+            this.overallRatings.push({rating : 6, classIndex : classIndex});
+            this.diffRatings.push({rating : 6, classIndex : classIndex});
+        }
+        updateHasRatings();
+        return ratings;
+    }
+};
+
 /* Functions not used yet */
 function printProfRating(profRatings){
     for(let classIndex = 0; classIndex < profRatings.length; classIndex++){
@@ -167,18 +194,32 @@ function sortCurrentClasses(target, profJson, TBA_RATING, sortByOverall, sortBut
 }
 
 function createButton(buttonInnerHtml){
-    var sortRatingButton = document.createElement('div');
-    sortRatingButton.innerHTML = '<button type = "button">' + buttonInnerHtml + '</button>';
+    var sortRatingButton = document.createElement('BUTTON');
+    sortRatingButton.innerHTML = buttonInnerHtml
     return sortRatingButton;
 }
 
 /* Creates button prompting user to sort by overall rating, and then adds it to the user view (next to the search button) */
-function createSortingButton(sortByText, target, profJson, TBA_RATING, sortByOverall){
-    var overallSort = createButton(sortByText);
-    overallSort.onclick = () => {
-        sortCurrentClasses(target, profJson, TBA_RATING, sortByOverall, overallSort);
+function createSortingButtons(target, profJson){
+    var overallSortButton = createButton("Sort by Overall Rating");
+    var diffSortButton = createButton("Sort by Difficulty");
+    overallSortButton.onclick = () => {
+        /*if(!profRatings.hasRatings()){
+            profRatings.getRatings();
+        }else{
+            console.log("Has ratings: " + profRatings);
+        }*/
+        sortCurrentClasses(target, profJson, -1, true, overallSortButton);
     }
-    return overallSort;
+    diffSortButton.onclick = () => {
+        /*if(!profRatings.hasRatings()){
+            profRatings.getRatings();
+        }else{
+            console.log("Has ratings: " + profRatings);
+        }*/
+        sortCurrentClasses(target, profJson, 6, false, diffSortButton);
+    }
+    return [overallSortButton, diffSortButton];
 }
 
 function createObserver(sortingButtonOverall, sortingButtonDifficulty, origOverallHtml, origDiffHtml){
@@ -205,9 +246,11 @@ const url = chrome.runtime.getURL('ProfTids.txt');
 fetch(url)
 .then((response) => response.json())
 .then((profJson) => {
+    //var profRatings = new Ratings();
     var inlineTarget = document.getElementById("inlineCourseResultsDiv");
-    var inlineSortOverall = createSortingButton("Sort By Overall Rating", inlineTarget, profJson, -1, true);
-    var inlineSortDifficulty = createSortingButton("Sort by Difficulty", inlineTarget, profJson, 6, false);
+    let sortingButtons = createSortingButtons(inlineTarget, profJson);
+    var inlineSortOverall = sortingButtons[0];
+    var inlineSortDifficulty = sortingButtons[1];
     detectDomChange(inlineTarget, inlineSortOverall, inlineSortDifficulty);
     addToView(document.getElementsByClassName("course-search-crn-title-container")[0], inlineSortOverall, inlineSortDifficulty);
 
