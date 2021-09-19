@@ -175,7 +175,7 @@ function sortCurrentClasses(target, profJson, TBA_RATING, sortByOverall, sortBut
                     profRating = TBA_RATING;
                 }else{
                     profRating = ratingDiv.innerHTML;
-                    console.log("Rating Divs inner html: " + ratingDiv.innerHTML);
+                    //console.log("Rating Divs inner html: " + ratingDiv.innerHTML);
                 }
                 
                 profRatings.push({rating : profRating, classIndex : savedClassIndex});
@@ -248,11 +248,19 @@ fetch(url)
 .then((profJson) => {
     //var profRatings = new Ratings();
     var inlineTarget = document.getElementById("inlineCourseResultsDiv");
-    let sortingButtons = createSortingButtons(inlineTarget, profJson);
-    var inlineSortOverall = sortingButtons[0];
-    var inlineSortDifficulty = sortingButtons[1];
+    let inlineSortingButtons = createSortingButtons(inlineTarget, profJson);
+    var inlineSortOverall = inlineSortingButtons[0];
+    var inlineSortDifficulty = inlineSortingButtons[1];
     detectDomChange(inlineTarget, inlineSortOverall, inlineSortDifficulty);
     addToView(document.getElementsByClassName("course-search-crn-title-container")[0], inlineSortOverall, inlineSortDifficulty);
+
+    var outlineTarget = document.getElementById("courseResultsDiv");
+    let outlineSortingButtons = createSortingButtons(outlineTarget, profJson);
+    var outlineSortOverall = outlineSortingButtons[0];
+    var outlineSortDifficulty = outlineSortingButtons[1];
+    detectDomChange(outlineTarget, outlineSortOverall, outlineSortDifficulty);
+    var outlineSearchBar = document.getElementById("CoursesSearch").getElementsByClassName("modal-body")[0].getElementsByClassName("course-search-container")[0].getElementsByClassName("align-center")[0];
+    addToView(outlineSearchBar, outlineSortOverall, outlineSortDifficulty);
 
     /*var outlineTarget = document.getElementById("courseResultsDiv");
     var outlineSort = createSortingButton("Sort by Overall Rating", outlineTarget, profJson, -1);
