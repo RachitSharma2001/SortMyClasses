@@ -209,6 +209,7 @@ function createSortingButtons(target, profJson){
         }else{
             console.log("Has ratings: " + profRatings);
         }*/
+        diffSortButton.innerHTML = "Sort by Difficulty";
         sortCurrentClasses(target, profJson, -1, true, overallSortButton);
     }
     diffSortButton.onclick = () => {
@@ -217,6 +218,7 @@ function createSortingButtons(target, profJson){
         }else{
             console.log("Has ratings: " + profRatings);
         }*/
+        overallSortButton.innerHTML = "Sort by Overall Rating";
         sortCurrentClasses(target, profJson, 6, false, diffSortButton);
     }
     return [overallSortButton, diffSortButton];
