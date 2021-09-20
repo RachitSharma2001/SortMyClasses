@@ -112,12 +112,49 @@ function scrapeDifficultyRating(doc){
     return doc.getElementsByClassName("FeedbackItem__FeedbackNumber-uof32n-1 kkESWs")[1];
 }
 
+/*
+async function sendMessage(profTids){
+    var promiseArr = [];
+    for(profTid in profTids){
+        let currPromise = new Promise(function(resolve, reject){
+            chrome.runtime.sendMessage({tid: "" + profTid}, async function (response){
+                console.log("We are in!");
+                var parser = new DOMParser();
+                var doc = parser.parseFromString(response.returned_text, "text/html");
+                var overallRatingDiv = scrapeOverallRating(doc);
+                // diffRating = scrapeDifficultyRating(doc);
+    
+                var overallRating = -1;
+                if(typeof overallRatingDiv != 'undefined'){
+                    overallRating = overallRatingDiv.innerHTML;
+                }
+                resolve(overallRating);
+            });
+        });
+        promiseArr.push(currPromise);
+    }
+
+    Promise.all(promiseArr).then((values) => {
+        console.log(values);
+    });
+}*/
+
+
 async function sendMessage(profTid){
     let messageReceived = new Promise(function(resolve, reject){
         chrome.runtime.sendMessage({tid: "" + profTid}, async function(response) {
             var parser = new DOMParser();
             var doc = parser.parseFromString(response.returned_text, "text/html");
-            resolve(doc);
+            var overallRatingDiv = scrapeOverallRating(doc);
+            // diffRating = scrapeDifficultyRating(doc);
+
+            var overallRating = -1;
+            if(typeof overallRatingDiv != 'undefined'){
+                overallRating = overallRatingDiv.innerHTML;
+            }
+            
+            resolve(overallRating);
+            //resolve([scrapeOverallRating(doc), scrapeDifficultyRating(doc)]);
         });
     });
 
@@ -245,6 +282,7 @@ function addToView(parentDiv, overallSortDiv, diffSortDiv){
     parentDiv.appendChild(diffSortDiv);
 }
 
+//sendMessage(2503455);
 let messageReceived = sendMessage(2503455);
 messageReceived.then((doc) => {
     console.log("Doc: " + doc);
