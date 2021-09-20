@@ -121,6 +121,8 @@ async function sendMessage(profTids){
                 console.log("We are in!");
                 var parser = new DOMParser();
                 var doc = parser.parseFromString(response.returned_text, "text/html");
+                console.log("Here is doc: " + doc);
+                console.log("Response: " + response.returned_text);
                 var overallRatingDiv = scrapeOverallRating(doc);
                 // diffRating = scrapeDifficultyRating(doc);
     
@@ -134,6 +136,7 @@ async function sendMessage(profTids){
         promiseArr.push(currPromise);
     }
 
+    console.log("Promise array: " + promiseArr);
     Promise.all(promiseArr).then((values) => {
         console.log(values);
     });
@@ -142,18 +145,23 @@ async function sendMessage(profTids){
 
 async function sendMessage(profTid){
     let messageReceived = new Promise(function(resolve, reject){
+        // What if I send a bunch of fetches at the same time?
         chrome.runtime.sendMessage({tid: "" + profTid}, async function(response) {
             var parser = new DOMParser();
             var doc = parser.parseFromString(response.returned_text, "text/html");
             var overallRatingDiv = scrapeOverallRating(doc);
-            // diffRating = scrapeDifficultyRating(doc);
+            var diffRatingDiv = scrapeDifficultyRating(doc);
 
             var overallRating = -1;
+            var diffRating = -1;
             if(typeof overallRatingDiv != 'undefined'){
                 overallRating = overallRatingDiv.innerHTML;
             }
+            if(typeof diffRatingDiv != 'undefined'){
+                diffRating = diffRatingDiv.innerHTML;
+            }
             
-            resolve(overallRating);
+            resolve([overallRating, diffRating]);
             //resolve([scrapeOverallRating(doc), scrapeDifficultyRating(doc)]);
         });
     });
@@ -282,11 +290,20 @@ function addToView(parentDiv, overallSortDiv, diffSortDiv){
     parentDiv.appendChild(diffSortDiv);
 }
 
-//sendMessage(2503455);
+//sendMessage([2503455, 2585755]);
+let messageReceived = sendMessage(2503455);
+messageReceived.then((ratingsArr) => {
+    console.log("First, Second: " + ratingsArr[0] + " " + ratingsArr[1]);
+});
+/*
 let messageReceived = sendMessage(2503455);
 messageReceived.then((doc) => {
     console.log("Doc: " + doc);
 });
+let messageReceived2 = sendMessage(2585755);
+messageReceived2.then((doc) => {
+    console.log("Doc: " + doc);
+});*/
 //console.log("Here is result: " + result.result);
 /*
 const url = chrome.runtime.getURL('ProfTids.txt');
