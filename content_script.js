@@ -15,7 +15,7 @@ var profRatings = [];
 /* Functions not used yet */
 function printProfRating(profRatings){
     for(let classIndex = 0; classIndex < profRatings.length; classIndex++){
-        console.log("index, rating: " + profRatings[classIndex].classIndex + ", " + profRatings[classIndex].rating);
+        console.log("index, rating: " + profRatings[classIndex].classIndex + ", " + profRatings[classIndex].overallRating + ", " + profRatings[classIndex].diffRating);
     }
 }
 
@@ -32,15 +32,15 @@ function addRatingToClass(givenClass, profRating){
 }
 
 /* Function currently used */
-function sortRatings(profRatings, favorHigherRatings){
+function sortRatings(profRatings, sortByOverall){
     profRatings.sort(function compareProfs(profObjLeft, profObjRight){
-        if(favorHigherRatings){
-            if(profObjLeft.rating > profObjRight.rating){
+        if(sortByOverall){
+            if(profObjLeft.overallRating > profObjRight.overallRating){
                 return -1;
             }
             return 0;
         }else{
-            if(profObjLeft.rating < profObjRight.rating){
+            if(profObjLeft.diffRating < profObjRight.diffRating){
                 return -1;
             }
             return 0;
@@ -112,38 +112,7 @@ function scrapeDifficultyRating(doc){
     return doc.getElementsByClassName("FeedbackItem__FeedbackNumber-uof32n-1 kkESWs")[1];
 }
 
-/*
-async function sendMessage(profTids){
-    var promiseArr = [];
-    for(profTid in profTids){
-        let currPromise = new Promise(function(resolve, reject){
-            chrome.runtime.sendMessage({tid: "" + profTid}, async function (response){
-                console.log("We are in!");
-                var parser = new DOMParser();
-                var doc = parser.parseFromString(response.returned_text, "text/html");
-                console.log("Here is doc: " + doc);
-                console.log("Response: " + response.returned_text);
-                var overallRatingDiv = scrapeOverallRating(doc);
-                // diffRating = scrapeDifficultyRating(doc);
-    
-                var overallRating = -1;
-                if(typeof overallRatingDiv != 'undefined'){
-                    overallRating = overallRatingDiv.innerHTML;
-                }
-                resolve(overallRating);
-            });
-        });
-        promiseArr.push(currPromise);
-    }
-
-    console.log("Promise array: " + promiseArr);
-    Promise.all(promiseArr).then((values) => {
-        console.log(values);
-    });
-}*/
-
-
-async function sendMessage(profTid){
+async function sendMessage(profTid, OVERALL_TBA_RATING, DIFF_TBA_RATING){
     let messageReceived = new Promise(function(resolve, reject){
         // What if I send a bunch of fetches at the same time?
         chrome.runtime.sendMessage({tid: "" + profTid}, async function(response) {
@@ -152,8 +121,8 @@ async function sendMessage(profTid){
             var overallRatingDiv = scrapeOverallRating(doc);
             var diffRatingDiv = scrapeDifficultyRating(doc);
 
-            var overallRating = -1;
-            var diffRating = -1;
+            var overallRating = OVERALL_TBA_RATING;
+            var diffRating = DIFF_TBA_RATING;
             if(typeof overallRatingDiv != 'undefined'){
                 overallRating = overallRatingDiv.innerHTML;
             }
@@ -170,52 +139,15 @@ async function sendMessage(profTid){
     return result;
 }
 
-async function getProfRatings(allClasses, profJson){
-    for(var classIndex = 0; classIndex < allClasses.length; classIndex++){
-        var profHrefs = allClasses[classIndex].getElementsByClassName("data-item-long active")[0].getElementsByClassName("float-left")[0].getElementsByClassName("clearfix")[0].getElementsByClassName("data-column")[4];
-        var profName = getProfessorName(profHrefs);
-        var profTid = getTid(profName, profJson);
-
-        if(profTid != -1){
-            const savedClassIndex = classIndex;
-            let messageRecieved = new Promise(function(resolve, reject){
-                chrome.runtime.sendMessage({tid: "" + profTid}, async function(response) {
-                    var parser = new DOMParser();
-                    var doc = parser.parseFromString(response.returned_text, "text/html");
-                    resolve(doc);
-                });
-            });
-            let returnedHtml = await messageRecieved;
-            var ratingDiv = null;
-            if(sortByOverall){
-                ratingDiv = scrapeOverallRating(returnedHtml);
-                //console.log("Sorting by Overall");
-            }else{
-                ratingDiv = scrapeDifficultyRating(returnedHtml);
-                //console.log("Sorting by Difficulty");
-                //console.log("Rating div: " + ratingDiv);
-                //console.log("Doc inner html: " + doc.DocumentNode.OuterHtml);
-                //console.log("Returned text inner html: " + response.returned_text);
-            } 
-
-            if(typeof ratingDiv === 'undefined'){
-                profRating = TBA_RATING;
-            }else{
-                profRating = ratingDiv.innerHTML;
-                //console.log("Rating Divs inner html: " + ratingDiv.innerHTML);
-            }
-                
-            profRatings.push({rating : profRating, classIndex : savedClassIndex});
-            if(profRatings.length == allClasses.length){
-                return profRatings;
-            }
-        }else{
-            profRatings.push({rating : TBA_RATING, classIndex : classIndex});
-        }
+function getDataFromHtml(allClasses){
+    var savedClasses = [];
+    for(var classInd = 0; classInd < allClasses.length; classInd++){
+        savedClasses.push(allClasses[classInd].innerHTML);
     }
+    return savedClasses;
 }
 
-function sortCurrentClasses(target, profJson, TBA_RATING, profRatings, sortByOverall, sortButton){
+function sortCurrentClasses(target, profJson, TBA_RATINGS, profRatings, sortByOverall, sortButton){
     var allClasses = target.getElementsByClassName("data-item");
     var savedClassData = [];
     var profRatings = [];
@@ -223,18 +155,35 @@ function sortCurrentClasses(target, profJson, TBA_RATING, profRatings, sortByOve
 
     var origButtonHtml = sortButton.innerHTML;
     changeHtmlOfDiv(sortButton, "Loading...");
+    savedClassData = getDataFromHtml(allClasses);
 
     if(profRatings.length == 0){
-        profRatings = getProfRatings(allClasses, profJson);
+        //profRatings = getProfRatings(allClasses, profJson);
+        for(var classIndex = 0; classIndex < allClasses.length; classIndex++){
+            var profHrefs = allClasses[classIndex].getElementsByClassName("data-item-long active")[0].getElementsByClassName("float-left")[0].getElementsByClassName("clearfix")[0].getElementsByClassName("data-column")[4];
+            var profName = getProfessorName(profHrefs);
+            var profTid = getTid(profName, profJson);
+            let messageReceived = sendMessage(profTid, TBA_RATINGS[0], TBA_RATINGS[1]);
+            
+            const savedClassIndex = classIndex;
+            messageReceived.then((ratingsArr) => {
+                profRatings.push({overallRating : ratingsArr[0], diffRating : ratingsArr[1], classIndex : savedClassIndex});
+                if(profRatings.length == allClasses.length){
+                    profRatings = sortRatings(profRatings, sortByOverall);
+                    allClasses = changeHtmlOfRows(savedClassData, profRatings, allClasses);
+                    changeHtmlOfDiv(sortButton, origButtonHtml);
+                    console.log("Done, here are the sorted classes:");
+                    printProfRating(profRatings);
+                }
+            });
+        }
+    }else{
+        profRatings = sortRatings(profRatings, sortByOverall);
+        allClasses = changeHtmlOfRows(savedClassData, profRatings, allClasses);
+        changeHtmlOfDiv(sortButton, origButtonHtml);
+        console.log("Done, here are the sorted classes:");
+        printProfRating(profRatings);
     }
-
-    profRatings = sortRatings(profRatings, sortByOverall);
-    allClasses = changeHtmlOfRows(savedClassData, profRatings, allClasses);
-    changeHtmlOfDiv(sortButton, origButtonHtml);
-    console.log("Done, here are the sorted classes:");
-    printProfRating(profRatings);
-
-    return profRatings;
 }
 
 function createButton(buttonInnerHtml){
@@ -254,7 +203,7 @@ function createSortingButtons(target, profJson){
             console.log("Has ratings: " + profRatings);
         }*/
         diffSortButton.innerHTML = "Sort by Difficulty";
-        sortCurrentClasses(target, profJson, -1, true, overallSortButton);
+        sortCurrentClasses(target, profJson, [-1, 6], [], true, overallSortButton);
     }
     diffSortButton.onclick = () => {
         /*if(!profRatings.hasRatings()){
@@ -263,7 +212,7 @@ function createSortingButtons(target, profJson){
             console.log("Has ratings: " + profRatings);
         }*/
         overallSortButton.innerHTML = "Sort by Overall Rating";
-        sortCurrentClasses(target, profJson, 6, false, diffSortButton);
+        sortCurrentClasses(target, profJson, [-1, 6], [], false, diffSortButton);
     }
     return [overallSortButton, diffSortButton];
 }
@@ -291,10 +240,10 @@ function addToView(parentDiv, overallSortDiv, diffSortDiv){
 }
 
 //sendMessage([2503455, 2585755]);
-let messageReceived = sendMessage(2503455);
+/*let messageReceived = sendMessage(2503455);
 messageReceived.then((ratingsArr) => {
     console.log("First, Second: " + ratingsArr[0] + " " + ratingsArr[1]);
-});
+});*/
 /*
 let messageReceived = sendMessage(2503455);
 messageReceived.then((doc) => {
@@ -305,7 +254,7 @@ messageReceived2.then((doc) => {
     console.log("Doc: " + doc);
 });*/
 //console.log("Here is result: " + result.result);
-/*
+
 const url = chrome.runtime.getURL('ProfTids.txt');
 fetch(url)
 .then((response) => response.json())
@@ -325,7 +274,7 @@ fetch(url)
     detectDomChange(outlineTarget, outlineSortOverall, outlineSortDifficulty);
     var outlineSearchBar = document.getElementById("CoursesSearch").getElementsByClassName("modal-body")[0].getElementsByClassName("course-search-container")[0].getElementsByClassName("align-center")[0];
     addToView(outlineSearchBar, outlineSortOverall, outlineSortDifficulty);
-});*/
+});
 
 
 
