@@ -9,32 +9,8 @@
     });
 }*/
 
-class Ratings{
-    constructor(){
-        this.hasRatings = false;
-        this.overallRatings = null;
-        this.diffRatings = null;
-    }
-
-    hasRatings(){
-        return this.hasRatings;
-    }
-
-    updateHasRatings(){
-        this.hasRatings = true;
-    }
-
-    getRatings(allClasses){
-        this.overallRatings = [];
-        this.diffRatings = [];
-        for(var classIndex = 0; classIndex < allClasses.length; classIndex++){
-            this.overallRatings.push({rating : 6, classIndex : classIndex});
-            this.diffRatings.push({rating : 6, classIndex : classIndex});
-        }
-        updateHasRatings();
-        return ratings;
-    }
-};
+// Global variable
+var profRatings = [];
 
 /* Functions not used yet */
 function printProfRating(profRatings){
@@ -136,7 +112,65 @@ function scrapeDifficultyRating(doc){
     return doc.getElementsByClassName("FeedbackItem__FeedbackNumber-uof32n-1 kkESWs")[1];
 }
 
-function sortCurrentClasses(target, profJson, TBA_RATING, sortByOverall, sortButton){
+async function sendMessage(profTid){
+    let messageReceived = new Promise(function(resolve, reject){
+        chrome.runtime.sendMessage({tid: "" + profTid}, async function(response) {
+            var parser = new DOMParser();
+            var doc = parser.parseFromString(response.returned_text, "text/html");
+            resolve(doc);
+        });
+    });
+
+    let result = await messageReceived;
+    return result;
+}
+
+async function getProfRatings(allClasses, profJson){
+    for(var classIndex = 0; classIndex < allClasses.length; classIndex++){
+        var profHrefs = allClasses[classIndex].getElementsByClassName("data-item-long active")[0].getElementsByClassName("float-left")[0].getElementsByClassName("clearfix")[0].getElementsByClassName("data-column")[4];
+        var profName = getProfessorName(profHrefs);
+        var profTid = getTid(profName, profJson);
+
+        if(profTid != -1){
+            const savedClassIndex = classIndex;
+            let messageRecieved = new Promise(function(resolve, reject){
+                chrome.runtime.sendMessage({tid: "" + profTid}, async function(response) {
+                    var parser = new DOMParser();
+                    var doc = parser.parseFromString(response.returned_text, "text/html");
+                    resolve(doc);
+                });
+            });
+            let returnedHtml = await messageRecieved;
+            var ratingDiv = null;
+            if(sortByOverall){
+                ratingDiv = scrapeOverallRating(returnedHtml);
+                //console.log("Sorting by Overall");
+            }else{
+                ratingDiv = scrapeDifficultyRating(returnedHtml);
+                //console.log("Sorting by Difficulty");
+                //console.log("Rating div: " + ratingDiv);
+                //console.log("Doc inner html: " + doc.DocumentNode.OuterHtml);
+                //console.log("Returned text inner html: " + response.returned_text);
+            } 
+
+            if(typeof ratingDiv === 'undefined'){
+                profRating = TBA_RATING;
+            }else{
+                profRating = ratingDiv.innerHTML;
+                //console.log("Rating Divs inner html: " + ratingDiv.innerHTML);
+            }
+                
+            profRatings.push({rating : profRating, classIndex : savedClassIndex});
+            if(profRatings.length == allClasses.length){
+                return profRatings;
+            }
+        }else{
+            profRatings.push({rating : TBA_RATING, classIndex : classIndex});
+        }
+    }
+}
+
+function sortCurrentClasses(target, profJson, TBA_RATING, profRatings, sortByOverall, sortButton){
     var allClasses = target.getElementsByClassName("data-item");
     var savedClassData = [];
     var profRatings = [];
@@ -145,52 +179,17 @@ function sortCurrentClasses(target, profJson, TBA_RATING, sortByOverall, sortBut
     var origButtonHtml = sortButton.innerHTML;
     changeHtmlOfDiv(sortButton, "Loading...");
 
-    //console.log("What is sort by overall: " + sortByOverall);
-    for(var classIndex = 0; classIndex < allClasses.length; classIndex++){
-        savedClassData.push(allClasses[classIndex].innerHTML);
-        
-        var profHrefs = allClasses[classIndex].getElementsByClassName("data-item-long active")[0].getElementsByClassName("float-left")[0].getElementsByClassName("clearfix")[0].getElementsByClassName("data-column")[4];
-        var profName = getProfessorName(profHrefs);
-        var profTid = getTid(profName, profJson);
-        
-        if(profTid != -1){
-            const savedClassIndex = classIndex
-            chrome.runtime.sendMessage({tid: "" + profTid}, async function(response) {
-                var parser = new DOMParser();
-                var doc = parser.parseFromString(response.returned_text, "text/html");
-
-                var ratingDiv = null;
-                if(sortByOverall){
-                    ratingDiv = scrapeOverallRating(doc);
-                    //console.log("Sorting by Overall");
-                }else{
-                    ratingDiv = scrapeDifficultyRating(doc);
-                    //console.log("Sorting by Difficulty");
-                    //console.log("Rating div: " + ratingDiv);
-                    //console.log("Doc inner html: " + doc.DocumentNode.OuterHtml);
-                    //console.log("Returned text inner html: " + response.returned_text);
-                } 
-
-                if(typeof ratingDiv === 'undefined'){
-                    profRating = TBA_RATING;
-                }else{
-                    profRating = ratingDiv.innerHTML;
-                    //console.log("Rating Divs inner html: " + ratingDiv.innerHTML);
-                }
-                
-                profRatings.push({rating : profRating, classIndex : savedClassIndex});
-                if(profRatings.length == allClasses.length){
-                    profRatings = sortRatings(profRatings, sortByOverall);
-                    allClasses = changeHtmlOfRows(savedClassData, profRatings, allClasses);
-                    changeHtmlOfDiv(sortButton, origButtonHtml);
-                    console.log("Done, here are the sorted classes:");
-                    printProfRating(profRatings);
-                }
-            });
-        }else{
-            profRatings.push({rating : TBA_RATING, classIndex : classIndex});
-        }
+    if(profRatings.length == 0){
+        profRatings = getProfRatings(allClasses, profJson);
     }
+
+    profRatings = sortRatings(profRatings, sortByOverall);
+    allClasses = changeHtmlOfRows(savedClassData, profRatings, allClasses);
+    changeHtmlOfDiv(sortButton, origButtonHtml);
+    console.log("Done, here are the sorted classes:");
+    printProfRating(profRatings);
+
+    return profRatings;
 }
 
 function createButton(buttonInnerHtml){
@@ -229,6 +228,8 @@ function createObserver(sortingButtonOverall, sortingButtonDifficulty, origOvera
         mutations.forEach(function(mutation) {
             changeHtmlOfDiv(sortingButtonOverall, origOverallHtml);
             changeHtmlOfDiv(sortingButtonDifficulty, origDiffHtml);
+            // Reset Professor Ratings now that search has reloaded 
+            profRatings = [];
         });
     });
 }
@@ -244,6 +245,12 @@ function addToView(parentDiv, overallSortDiv, diffSortDiv){
     parentDiv.appendChild(diffSortDiv);
 }
 
+let messageReceived = sendMessage(2503455);
+messageReceived.then((doc) => {
+    console.log("Doc: " + doc);
+});
+//console.log("Here is result: " + result.result);
+/*
 const url = chrome.runtime.getURL('ProfTids.txt');
 fetch(url)
 .then((response) => response.json())
@@ -263,13 +270,9 @@ fetch(url)
     detectDomChange(outlineTarget, outlineSortOverall, outlineSortDifficulty);
     var outlineSearchBar = document.getElementById("CoursesSearch").getElementsByClassName("modal-body")[0].getElementsByClassName("course-search-container")[0].getElementsByClassName("align-center")[0];
     addToView(outlineSearchBar, outlineSortOverall, outlineSortDifficulty);
+});*/
 
-    /*var outlineTarget = document.getElementById("courseResultsDiv");
-    var outlineSort = createSortingButton("Sort by Overall Rating", outlineTarget, profJson, -1);
-    detectDomChange(outlineTarget, outlineSort);
-    addToView(document.getElementById("CoursesSearch").getElementsByClassName("modal-body")[0].getElementsByClassName("course-search-container")[0].getElementsByClassName("align-center")[0], outlineSort)
-    */
-});
+
 
 /* 
     TODO:
