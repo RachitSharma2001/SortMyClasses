@@ -155,7 +155,6 @@ async function sortCurrentClasses(target, profJson, TBA_RATINGS, sortByOverall, 
         var profTids = [];
 
         var origButtonHtml = sortButton.innerHTML;
-        changeHtmlOfDiv(sortButton, "Loading...");
         savedClassData = getDataFromHtml(allClasses);
         for(var classIndex = 0; classIndex < allClasses.length; classIndex++){
             var profHrefs = allClasses[classIndex].getElementsByClassName("data-item-long active")[0].getElementsByClassName("float-left")[0].getElementsByClassName("clearfix")[0].getElementsByClassName("data-column")[4];
@@ -166,7 +165,6 @@ async function sortCurrentClasses(target, profJson, TBA_RATINGS, sortByOverall, 
 
             if(profTid != -1){
                 const savedClassIndex = classIndex;
-                console.log("Prof tid is not -1");
                 chrome.runtime.sendMessage({tid: "" + profTid}, async function(response) {
                     var parser = new DOMParser();
                     var doc = parser.parseFromString(response.returned_text, "text/html");
@@ -182,20 +180,9 @@ async function sortCurrentClasses(target, profJson, TBA_RATINGS, sortByOverall, 
                         diffRating = diffRatingDiv.innerHTML;
                     }
 
-                    console.log("Here are overall ratings and difficulty ratings: " + overallRating + ", " + diffRating);
-                        
                     profRatings.push({overallRating : overallRating, diffRating : diffRating, classIndex : savedClassIndex});
                     if(profRatings.length == allClasses.length){
-                        for(var i = 0; i < profRatings.length; i++){
-                            console.log("Overall, class index: " + profRatings[i].overallRating + " " + profRatings[i].classIndex);
-                        }
                         profRatings = sortRatings(profRatings, sortByOverall);
-                        console.log("After sorting:");
-                        for(var i = 0; i < profRatings.length; i++){
-                            console.log("Overall, class index: " + profRatings[i].overallRating + " " + profRatings[i].classIndex);
-                        }
-
-                        console.log("Now prof ratings length == allclasses length, lets check profRatings:");
                             /*allClasses = changeHtmlOfRows(savedClassData, profRatings, allClasses);
                             changeHtmlOfDiv(sortButton, origButtonHtml);
                             console.log("Done, here are the sorted classes:");
@@ -214,6 +201,7 @@ async function sortCurrentClasses(target, profJson, TBA_RATINGS, sortByOverall, 
     });
 
     messageReceived.then((profRatings) => {
+        changeHtmlOfDiv(sortButton, "Sort By Overall Rating");
         /*for(rating in profRatings){
             console.log(rating.overallRating);
         }*/
@@ -256,6 +244,14 @@ function createObserver(target, profJson, sortingButtonOverall, sortingButtonDif
             // Reset Professor Ratings now that search has reloaded 
             console.log("Resetting profRatings");
             profRatings = [];
+            changeHtmlOfDiv(sortingButtonOverall, "Loading...");
+            sortingButtonOverall.onclick = () => {
+               console.log("Still need to load all classes");
+            }
+            changeHtmlOfDiv(sortingButtonDifficulty, "Loading...");
+            sortingButtonDifficulty.onclick = () => {
+               console.log("Still need to load all classes");
+            }
             sortCurrentClasses(target, profJson, [-1, 6], true, sortingButtonOverall);
             /*messageReceived.then(() => {
                 sortingButtonOverall.onclick = () => {
