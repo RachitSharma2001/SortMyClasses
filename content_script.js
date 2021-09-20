@@ -157,6 +157,7 @@ async function sortCurrentClasses(target, profJson, TBA_RATINGS, sortByOverall, 
         var origButtonHtml = sortButton.innerHTML;
         savedClassData = getDataFromHtml(allClasses);
         for(var classIndex = 0; classIndex < allClasses.length; classIndex++){
+            savedClassData.push(allClasses[classIndex].innerHTML);
             var profHrefs = allClasses[classIndex].getElementsByClassName("data-item-long active")[0].getElementsByClassName("float-left")[0].getElementsByClassName("clearfix")[0].getElementsByClassName("data-column")[4];
             var profName = getProfessorName(profHrefs);
             var profTid = getTid(profName, profJson);
@@ -188,7 +189,7 @@ async function sortCurrentClasses(target, profJson, TBA_RATINGS, sortByOverall, 
                             console.log("Done, here are the sorted classes:");
                             printProfRating(profRatings);
                             console.log("Prof ratings length: " + profRatings.length);*/
-                        resolve(profRatings);
+                        resolve([profRatings, savedClassData, allClasses]);
                     }
                 });
             }else{
@@ -196,11 +197,16 @@ async function sortCurrentClasses(target, profJson, TBA_RATINGS, sortByOverall, 
             }
         }
         if(profRatings.length == allClasses.length){
-            resolve(profRatings);
+            resolve([profRatings, savedClassData, allClasses]);
         }
     });
 
-    messageReceived.then((profRatings) => {
+    messageReceived.then((promiseArr) => {
+        var profRatings = promiseArr[0];
+        console.log("Done, here are the sorted classes:");
+        printProfRating(profRatings);
+        var savedClassData = promiseArr[1];
+        var allClasses = promiseArr[2];
         changeHtmlOfDiv(sortButton, "Sort By Overall Rating");
         /*for(rating in profRatings){
             console.log(rating.overallRating);
@@ -208,9 +214,13 @@ async function sortCurrentClasses(target, profJson, TBA_RATINGS, sortByOverall, 
         sortButton.onclick = () => {
             //sortingButtonDifficulty.innerHTML = "Sort by Difficulty";
             console.log("Inside on click, here are prof ratings:");
-            for(var i = 0; i < profRatings.length; i++){
+            /*for(var i = 0; i < profRatings.length; i++){
                 console.log("Overall, class index: " + profRatings[i].overallRating + " " + profRatings[i].classIndex);
+            }*/
+            for(var i = 0; i < profRatings.length; i++){
+                console.log(savedClassData[i].innerHTML);
             }
+            allClasses = changeHtmlOfRows(savedClassData, profRatings, target.getElementsByClassName("data-item"));
         };
     });
 }
