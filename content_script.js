@@ -261,11 +261,19 @@ fetch(url)
 .then((response) => response.json())
 .then((profJson) => {
     //var profRatings = new Ratings();
-    var inlineTarget = document.getElementById("inlineCourseResultsDiv");
-    var inlineButtonIds = ["inlineOverall", "inlineDiff"];
+    let inlineTarget = document.getElementById("inlineCourseResultsDiv");
+    let inlineButtonIds = ["inlineOverall", "inlineDiff"];
     let inlineSortingButtons = createSortingButtons(inlineButtonIds);
     detectDomChange(inlineTarget, profJson, inlineSortingButtons, inlineButtonIds);
-    addToView(document.getElementsByClassName("course-search-crn-title-container")[0], inlineSortingButtons);
+    let inlineSearchBar = document.getElementsByClassName("course-search-crn-title-container")[0];
+    addToView(inlineSearchBar, inlineSortingButtons);
+
+    let outlineTarget = document.getElementById("courseResultsDiv");
+    let outlineButtonIds = ["outlineOverall", "outlineDiff"];
+    let outlineSortingButtons = createSortingButtons(outlineButtonIds);
+    detectDomChange(outlineTarget, profJson, outlineSortingButtons, outlineButtonIds);
+    let outlineSearchBar = document.getElementById("CoursesSearch").getElementsByClassName("modal-body")[0].getElementsByClassName("course-search-container")[0].getElementsByClassName("align-center")[0];
+    addToView(outlineSearchBar, outlineSortingButtons);
 
     /*var outlineTarget = document.getElementById("courseResultsDiv");
     let outlineSortingButtons = createSortingButtons(outlineTarget//);
