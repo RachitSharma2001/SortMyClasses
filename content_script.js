@@ -146,7 +146,7 @@ function getDataFromHtml(allClasses){
     return savedClasses;
 }
 
-async function sortCurrentClasses(target, profJson, TBA_RATINGS, sortByOverall, sortButton){
+async function sortCurrentClasses(target, profJson, TBA_RATINGS, sortOverallButton, sortDiffButton){
 
     let messageReceived = new Promise(function(resolve, reject){
         var allClasses = target.getElementsByClassName("data-item");
@@ -154,10 +154,8 @@ async function sortCurrentClasses(target, profJson, TBA_RATINGS, sortByOverall, 
         var profRatings = [];
         var profTids = [];
 
-        var origButtonHtml = sortButton.innerHTML;
         savedClassData = getDataFromHtml(allClasses);
         for(var classIndex = 0; classIndex < allClasses.length; classIndex++){
-            savedClassData.push(allClasses[classIndex].innerHTML);
             var profHrefs = allClasses[classIndex].getElementsByClassName("data-item-long active")[0].getElementsByClassName("float-left")[0].getElementsByClassName("clearfix")[0].getElementsByClassName("data-column")[4];
             var profName = getProfessorName(profHrefs);
             var profTid = getTid(profName, profJson);
@@ -183,7 +181,7 @@ async function sortCurrentClasses(target, profJson, TBA_RATINGS, sortByOverall, 
 
                     profRatings.push({overallRating : overallRating, diffRating : diffRating, classIndex : savedClassIndex});
                     if(profRatings.length == allClasses.length){
-                        profRatings = sortRatings(profRatings, sortByOverall);
+                        //profRatings = sortRatings(profRatings, sortByOverall);
                             /*allClasses = changeHtmlOfRows(savedClassData, profRatings, allClasses);
                             changeHtmlOfDiv(sortButton, origButtonHtml);
                             console.log("Done, here are the sorted classes:");
@@ -200,41 +198,50 @@ async function sortCurrentClasses(target, profJson, TBA_RATINGS, sortByOverall, 
             resolve([profRatings, savedClassData, allClasses]);
         }
     });
-
+    console.log("Inside sortCurrentClass, ids of sorting overall and diff ids: " + sortOverallButton.id + " " + sortDiffButton.id);
     messageReceived.then((promiseArr) => {
         var profRatings = promiseArr[0];
-        console.log("Done, here are the sorted classes:");
-        printProfRating(profRatings);
         var savedClassData = promiseArr[1];
         var allClasses = promiseArr[2];
-        changeHtmlOfDiv(sortButton, "Sort By Overall Rating");
+        changeHtmlOfDiv(document.getElementById("overall"), "Sort By Overall Rating");
+        changeHtmlOfDiv(document.getElementById("difficulty"), "Sort By Difficulty Rating");
         /*for(rating in profRatings){
             console.log(rating.overallRating);
         }*/
-        sortButton.onclick = () => {
+        document.getElementById("overall").onclick = () => {
+            profRatings = sortRatings(profRatings, true);
             //sortingButtonDifficulty.innerHTML = "Sort by Difficulty";
             console.log("Inside on click, here are prof ratings:");
-            /*for(var i = 0; i < profRatings.length; i++){
+            for(var i = 0; i < profRatings.length; i++){
                 console.log("Overall, class index: " + profRatings[i].overallRating + " " + profRatings[i].classIndex);
-            }*/
+            }
             for(var i = 0; i < profRatings.length; i++){
                 console.log(savedClassData[i].innerHTML);
+            }
+            allClasses = changeHtmlOfRows(savedClassData, profRatings, target.getElementsByClassName("data-item"));
+        };
+        document.getElementById("difficulty").onclick = () => {
+            profRatings = sortRatings(profRatings, false);
+            console.log("Inside on click, here are prof ratings:");
+            for(var i = 0; i < profRatings.length; i++){
+                console.log("Overall, class index: " + profRatings[i].diffRating + " " + profRatings[i].classIndex);
             }
             allClasses = changeHtmlOfRows(savedClassData, profRatings, target.getElementsByClassName("data-item"));
         };
     });
 }
 
-function createButton(buttonInnerHtml){
+function createButton(buttonInnerHtml, buttonId){
     var sortRatingButton = document.createElement('BUTTON');
-    sortRatingButton.innerHTML = buttonInnerHtml
+    sortRatingButton.id = buttonId;
+    sortRatingButton.innerHTML = buttonInnerHtml;
     return sortRatingButton;
 }
 
 /* Creates button prompting user to sort by overall rating, and then adds it to the user view (next to the search button) */
-function createSortingButtons(target/*, profJson*/){
-    var overallSortButton = createButton("Sort by Overall Rating");
-    var diffSortButton = createButton("Sort by Difficulty");
+function createSortingButtons(){
+    var overallSortButton = createButton("Sort by Overall Rating", "overall");
+    var diffSortButton = createButton("Sort by Difficulty", "difficulty");
     /*overallSortButton.onclick = () => {
         diffSortButton.innerHTML = "Sort by Difficulty";
         sortCurrentClasses(target, profJson, [-1, 6], true, overallSortButton);
@@ -258,11 +265,12 @@ function createObserver(target, profJson, sortingButtonOverall, sortingButtonDif
             sortingButtonOverall.onclick = () => {
                console.log("Still need to load all classes");
             }
-            changeHtmlOfDiv(sortingButtonDifficulty, "Loading...");
+            changeHtmlOfDiv(sortingButtonDifficulty, "Loading Diff...");
             sortingButtonDifficulty.onclick = () => {
                console.log("Still need to load all classes");
             }
-            sortCurrentClasses(target, profJson, [-1, 6], true, sortingButtonOverall);
+            console.log("Sorting buttons id inside createObserver: " + sortingButtonOverall.id + " " + sortingButtonDifficulty.id);
+            sortCurrentClasses(target, profJson, [-1, 6], true, sortingButtonOverall, sortingButtonDifficulty);
             /*messageReceived.then(() => {
                 sortingButtonOverall.onclick = () => {
                     sortingButtonDifficulty.innerHTML = "Sort by Difficulty";
@@ -310,9 +318,10 @@ fetch(url)
 .then((profJson) => {
     //var profRatings = new Ratings();
     var inlineTarget = document.getElementById("inlineCourseResultsDiv");
-    let inlineSortingButtons = createSortingButtons(inlineTarget/*, profJson*/);
+    let inlineSortingButtons = createSortingButtons();
     var inlineSortOverall = inlineSortingButtons[0];
     var inlineSortDifficulty = inlineSortingButtons[1];
+    console.log("Overall, diff button ids in main fetch: " + inlineSortOverall.id + " " + inlineSortDifficulty.id);
     detectDomChange(inlineTarget, profJson, inlineSortOverall, inlineSortDifficulty);
     addToView(document.getElementsByClassName("course-search-crn-title-container")[0], inlineSortOverall, inlineSortDifficulty);
 
