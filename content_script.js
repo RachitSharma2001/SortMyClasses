@@ -1,24 +1,9 @@
-// Observe when DOM changes, meaning user searched for new classes
-/*function createObserver(target, profJson, TBA_RATING){
-    return new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-           
-                
-            }
-        });
-    });
-}*/
-
-// Global variable
-var profRatings = [];
-
 /* Functions not used yet */
 function printProfRating(profRatings){
     for(let classIndex = 0; classIndex < profRatings.length; classIndex++){
         console.log("index, rating: " + profRatings[classIndex].classIndex + ", " + profRatings[classIndex].overallRating + ", " + profRatings[classIndex].diffRating);
     }
 }
-
 
 function hasRMPLink(profInnerHtml){
     return profInnerHtml.includes("(<a href");
@@ -165,7 +150,6 @@ async function sortCurrentClasses(target, profJson, TBA_RATINGS, sortButtonIds){
         var profRatings = [];
         var profTids = [];
 
-        savedClassData = getDataFromHtml(allClasses);
         for(var classIndex = 0; classIndex < allClasses.length; classIndex++){
             var profTid = getTid(allClasses[classIndex], profJson);
 
@@ -209,8 +193,18 @@ async function sortCurrentClasses(target, profJson, TBA_RATINGS, sortButtonIds){
         
         changeHtmlOfDiv(sortOverallButton, "Sort By Overall Rating");
         changeHtmlOfDiv(sortDiffButton, "Sort By Difficulty Rating");
-        sortOnButtonClick(target, sortOverallButton, profRatings, true, allClasses, savedClassData);
-        sortOnButtonClick(target, sortDiffButton, profRatings, false, allClasses, savedClassData);
+        sortOverallButton.onclick = () => {
+            if(savedClassData.length == 0) savedClassData = getDataFromHtml(allClasses);
+            profRatings = sortRatings(profRatings, true);
+            allClasses = changeHtmlOfRows(savedClassData, profRatings, target.getElementsByClassName("data-item"));
+        };
+        sortDiffButton.onclick = () => {
+            if(savedClassData.length == 0) savedClassData = getDataFromHtml(allClasses);
+            profRatings = sortRatings(profRatings, false);
+            allClasses = changeHtmlOfRows(savedClassData, profRatings, target.getElementsByClassName("data-item"));
+        };
+        //sortOnButtonClick(target, sortOverallButton, profRatings, true, allClasses, savedClassData);
+        //sortOnButtonClick(target, sortDiffButton, profRatings, false, allClasses, savedClassData);
     });
 }
 
@@ -260,7 +254,6 @@ const url = chrome.runtime.getURL('ProfTids.txt');
 fetch(url)
 .then((response) => response.json())
 .then((profJson) => {
-    //var profRatings = new Ratings();
     let inlineTarget = document.getElementById("inlineCourseResultsDiv");
     let inlineButtonIds = ["inlineOverall", "inlineDiff"];
     let inlineSortingButtons = createSortingButtons(inlineButtonIds);
@@ -274,32 +267,4 @@ fetch(url)
     detectDomChange(outlineTarget, profJson, outlineSortingButtons, outlineButtonIds);
     let outlineSearchBar = document.getElementById("CoursesSearch").getElementsByClassName("modal-body")[0].getElementsByClassName("course-search-container")[0].getElementsByClassName("align-center")[0];
     addToView(outlineSearchBar, outlineSortingButtons);
-
-    /*var outlineTarget = document.getElementById("courseResultsDiv");
-    let outlineSortingButtons = createSortingButtons(outlineTarget//);
-    var outlineSortOverall = outlineSortingButtons[0];
-    var outlineSortDifficulty = outlineSortingButtons[1];
-    detectDomChange(outlineTarget, outlineSortOverall, outlineSortDifficulty);
-    var outlineSearchBar = document.getElementById("CoursesSearch").getElementsByClassName("modal-body")[0].getElementsByClassName("course-search-container")[0].getElementsByClassName("align-center")[0];
-    addToView(outlineSearchBar, outlineSortOverall, outlineSortDifficulty);*/
 });
-
-
-
-/* 
-    TODO:
-    2. Why does sortOverallButton id undefined inside the sortCurrentClasses function?
-        a. Somethign with async functions or is it stupid mistake?
-        b. I want to replace teh document.getElementbyId stuff (or maybe we should keep it?)
-    3.  Update outline with the stuff
-    3.5 Clean up code and seperate stuff in sortCurrentClasses and detectDomChange and createObserver, into functions!
-    4. Submit to chrome 
-    4 Handle case when mulitple professors
-    5. Clean up code
-        a. Split into classes?
-        b. Search up google chrome extension projects and see how they are organized
-    6. Other:
-        a. make faster -> see if its the message passsing with background thats taking the most time or if its the fetching thats taking a bunch of time
-            i. If its message passing, see how to pass all the urls at once and get back all the ratings
-            ii. If its fetching, see how to fetch a bunch of urls at once quickly
-*/
