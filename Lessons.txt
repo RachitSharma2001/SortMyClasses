@@ -7,3 +7,6 @@ muster the energy to try to play with it and try to get it working. That is so i
     c. For example, figuring out how to use promises to send all urls at once to RMP in order to speed up program, or figuring out how to deal with multiple profs in a class, or
     figuring out how to only send for the url of a professor once even if prof appears multiple times(teaches multiple classes)
 2. When you have too many functions, you need to split into classes early, or else your code will just be a mess of a bunch of functions
+3. When you make changes to code, before running it and praying that it will just magically work, make sure to go through your code and all the functions and see 
+if logically it makes sense what your doing. You will be able to catch bugs and other mistakes that will take a lot longer if you just try to magically run it and hope 
+everything works!
