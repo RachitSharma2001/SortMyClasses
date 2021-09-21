@@ -101,32 +101,6 @@ function scrapeDifficultyRating(doc){
     return doc.getElementsByClassName("FeedbackItem__FeedbackNumber-uof32n-1 kkESWs")[1];
 }
 
-async function sendMessage(profTid, OVERALL_TBA_RATING, DIFF_TBA_RATING){
-    let messageReceived = new Promise(function(resolve, reject){
-        // What if I send a bunch of fetches at the same time?
-        chrome.runtime.sendMessage({tid: "" + profTid}, async function(response) {
-            var parser = new DOMParser();
-            var doc = parser.parseFromString(response.returned_text, "text/html");
-            var overallRatingDiv = scrapeOverallRating(doc);
-            var diffRatingDiv = scrapeDifficultyRating(doc);
-
-            var overallRating = OVERALL_TBA_RATING;
-            var diffRating = DIFF_TBA_RATING;
-            if(typeof overallRatingDiv != 'undefined'){
-                overallRating = overallRatingDiv.innerHTML;
-            }
-            if(typeof diffRatingDiv != 'undefined'){
-                diffRating = diffRatingDiv.innerHTML;
-            }
-            
-            resolve([overallRating, diffRating]);
-        });
-    });
-
-    let result = await messageReceived;
-    return result;
-}
-
 function getDataFromHtml(allClasses){
     var savedClasses = [];
     for(var classInd = 0; classInd < allClasses.length; classInd++){
@@ -268,3 +242,20 @@ fetch(url)
     let outlineSearchBar = document.getElementById("CoursesSearch").getElementsByClassName("modal-body")[0].getElementsByClassName("course-search-container")[0].getElementsByClassName("align-center")[0];
     addToView(outlineSearchBar, outlineSortingButtons);
 });
+
+/* 
+TODO:
+1. Fix bug:
+    a. The bug is that if there are too many classes, then the first time you sort it doesn't sort correctly (try selecting only WC, and sorting by OVerall initially)
+        Wierd thing is bug only happens the first time we click SortByOverall. After clicking sortbydiff, we can then sortbyoverall effeciently as well.
+    b. We first thought it was because sorting took too long and it changedRows before sorting finished, but using Promise didn't work
+    c. So it must be some other thing that isn't finishing before we changeHTML of Divs. 
+2. Make button ui better
+    a. Just make a little space between buttons
+3. Submit
+
+BTW:
+1. It works no matter what order they install sortbyrating and rmplinks (rmp-link-disappearing-after-sort bug gone)
+2. It works on mac 
+
+*/
