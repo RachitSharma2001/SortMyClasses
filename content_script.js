@@ -95,11 +95,15 @@ function getProfessorName(profHrefs){
     return null;
 }
 
-function getTid(profName, profJson){
+// Gets the tid of the professor of the current class
+function getTid(currClass, profJson){
+    let profHrefs = currClass.getElementsByClassName("data-item-long active")[0].getElementsByClassName("float-left")[0].getElementsByClassName("clearfix")[0].getElementsByClassName("data-column")[4];
+    let profName = getProfessorName(profHrefs)
+    
     if(profName == null){
         return -1;
     }
-    var profNameInFormat = getNameInFormat(profName);
+    let profNameInFormat = getNameInFormat(profName);
     return profJson[profNameInFormat];
 }
 
@@ -146,7 +150,14 @@ function getDataFromHtml(allClasses){
     return savedClasses;
 }
 
-async function sortCurrentClasses(target, profJson, TBA_RATINGS, sortButtons, sortButtonIds){
+function sortOnButtonClick(target, button, profRatings, sortByOverall, allClasses, savedClassData){
+    button.onclick = () => {
+        profRatings = sortRatings(profRatings, sortByOverall);
+        allClasses = changeHtmlOfRows(savedClassData, profRatings, target.getElementsByClassName("data-item"));
+    };
+}
+
+async function sortCurrentClasses(target, profJson, TBA_RATINGS, sortButtonIds){
 
     let messageReceived = new Promise(function(resolve, reject){
         var allClasses = target.getElementsByClassName("data-item");
@@ -156,9 +167,7 @@ async function sortCurrentClasses(target, profJson, TBA_RATINGS, sortButtons, so
 
         savedClassData = getDataFromHtml(allClasses);
         for(var classIndex = 0; classIndex < allClasses.length; classIndex++){
-            var profHrefs = allClasses[classIndex].getElementsByClassName("data-item-long active")[0].getElementsByClassName("float-left")[0].getElementsByClassName("clearfix")[0].getElementsByClassName("data-column")[4];
-            var profName = getProfessorName(profHrefs);
-            var profTid = getTid(profName, profJson);
+            var profTid = getTid(allClasses[classIndex], profJson);
 
             if(profTid != -1){
                 const savedClassIndex = classIndex;
@@ -195,30 +204,13 @@ async function sortCurrentClasses(target, profJson, TBA_RATINGS, sortButtons, so
         var profRatings = promiseArr[0];
         var savedClassData = promiseArr[1];
         var allClasses = promiseArr[2];
-
-        console.log("Button ids: " + sortButtonIds[0] + " " + sortButtonIds[1]);
-
-        changeHtmlOfDiv(document.getElementById(sortButtonIds[0]), "Sort By Overall Rating");
-        changeHtmlOfDiv(document.getElementById(sortButtonIds[1]), "Sort By Difficulty Rating");
-        document.getElementById(sortButtonIds[0]).onclick = () => {
-            profRatings = sortRatings(profRatings, true);
-            console.log("Inside on click, here are prof ratings:");
-            for(var i = 0; i < profRatings.length; i++){
-                console.log("Overall, class index: " + profRatings[i].overallRating + " " + profRatings[i].classIndex);
-            }
-            for(var i = 0; i < profRatings.length; i++){
-                console.log(savedClassData[i].innerHTML);
-            }
-            allClasses = changeHtmlOfRows(savedClassData, profRatings, target.getElementsByClassName("data-item"));
-        };
-        document.getElementById(sortButtonIds[1]).onclick = () => {
-            profRatings = sortRatings(profRatings, false);
-            console.log("Inside on click, here are prof ratings:");
-            for(var i = 0; i < profRatings.length; i++){
-                console.log("Overall, class index: " + profRatings[i].diffRating + " " + profRatings[i].classIndex);
-            }
-            allClasses = changeHtmlOfRows(savedClassData, profRatings, target.getElementsByClassName("data-item"));
-        };
+        var sortOverallButton = document.getElementById(sortButtonIds[0]);
+        var sortDiffButton = document.getElementById(sortButtonIds[1]);
+        
+        changeHtmlOfDiv(sortOverallButton, "Sort By Overall Rating");
+        changeHtmlOfDiv(sortDiffButton, "Sort By Difficulty Rating");
+        sortOnButtonClick(target, sortOverallButton, profRatings, true, allClasses, savedClassData);
+        sortOnButtonClick(target, sortDiffButton, profRatings, false, allClasses, savedClassData);
     });
 }
 
@@ -248,7 +240,7 @@ function createObserver(target, profJson, sortButtons, sortButtonIds){
             sortButtons[1].onclick = () => {
                console.log("Still need to load all classes");
             }
-            sortCurrentClasses(target, profJson, [-1, 6], sortButtons, sortButtonIds);
+            sortCurrentClasses(target, profJson, [-1, 6], sortButtonIds);
         });
     });
 }
