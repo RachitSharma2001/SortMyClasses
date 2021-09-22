@@ -200,6 +200,11 @@ function createButton(buttonInnerHtml, buttonId){
     return sortRatingButton;
 }
 
+function createSpace(){
+    var space = document.createTextNode( '\u00A0' );
+    return space;
+}
+
 /* Creates button prompting user to sort by overall rating, and then adds it to the user view (next to the search button) */
 function createSortingButtons(sortButtonIds){
     var overallSortButton = createButton("Sort by Overall Rating", sortButtonIds[0]);
@@ -232,6 +237,7 @@ function detectDomChange(target, profJson, sortButtons, sortButtonIds){
 
 function addToView(parentDiv, sortButtons){
     parentDiv.appendChild(sortButtons[0]);
+    parentDiv.appendChild(createSpace());
     parentDiv.appendChild(sortButtons[1]);
 }
 
