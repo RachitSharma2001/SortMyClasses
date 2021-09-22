@@ -155,10 +155,6 @@ async function sortCurrentClasses(target, profJson, TBA_RATINGS, sortButtonIds){
                     if(profOverallRatings.length == allClasses.length){
                         profOverallRatings = sortRatings(profOverallRatings, true);
                         profDiffRatings = sortRatings(profDiffRatings, false);
-                        console.log("Prof ratings by overall:");
-                        printProfRating(profOverallRatings);
-                        console.log("Prof ratings by difficulty:");
-                        printProfRating(profDiffRatings);
                         resolve([profOverallRatings, profDiffRatings, savedClassData, allClasses]);
                     }
                 });
@@ -170,10 +166,6 @@ async function sortCurrentClasses(target, profJson, TBA_RATINGS, sortButtonIds){
         if(profOverallRatings.length == allClasses.length){
             profOverallRatings = sortRatings(profOverallRatings, true);
             profDiffRatings = sortRatings(profDiffRatings, false);
-            console.log("Prof ratings by overall:");
-            printProfRating(profOverallRatings);
-            console.log("Prof ratings by difficulty:");
-            printProfRating(profDiffRatings);
             resolve([profOverallRatings, profDiffRatings, savedClassData, allClasses]);
         }
     });
