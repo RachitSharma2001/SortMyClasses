@@ -21,12 +21,20 @@ function sortRatings(profRatings, sortByOverall){
     profRatings.sort(function compareProfs(profObjLeft, profObjRight){
         if(sortByOverall){
             if(profObjLeft.overallRating > profObjRight.overallRating){
+                //console.log("Prof Obj left, right overall: " + profObjLeft.overallRating + " " + profObjRight.overallRating);
+                //console.log("Left > right");
                 return -1;
+            }else if(profObjLeft.overallRating < profObjRight.overallRating){
+                //console.log("Prof Obj left, right overall: " + profObjLeft.overallRating + " " + profObjRight.overallRating);
+                //console.log("left < right");
+                return 1;
             }
             return 0;
         }else{
             if(profObjLeft.diffRating < profObjRight.diffRating){
                 return -1;
+            }else if(profObjLeft.diffRating > profObjRight.diffRating){
+                return 1;
             }
             return 0;
         }
@@ -36,6 +44,7 @@ function sortRatings(profRatings, sortByOverall){
 }
 
 function changeHtmlOfRows(savedClassData, sortedClasses, htmlOfClassRows){
+    console.log("Changing HTML of this row:");
     for(var classIndex = 0; classIndex < htmlOfClassRows.length; classIndex++){
         htmlOfClassRows[classIndex].innerHTML = savedClassData[sortedClasses[classIndex].classIndex];
     }
@@ -103,9 +112,12 @@ function scrapeDifficultyRating(doc){
 
 function getDataFromHtml(allClasses){
     var savedClasses = [];
+    console.log("Saving Classes:");
     for(var classInd = 0; classInd < allClasses.length; classInd++){
+        console.log(classInd);
         savedClasses.push(allClasses[classInd].innerHTML);
     }
+    console.log("Done saving classes");
     return savedClasses;
 }
 
@@ -137,7 +149,7 @@ async function sortCurrentClasses(target, profJson, TBA_RATINGS, sortButtonIds){
 
                     var overallRating = TBA_RATINGS[0];
                     var diffRating = TBA_RATINGS[1];
-                    if(typeof overallRatingDiv != 'undefined'){
+                    if(typeof overallRatingDiv != 'undefined' && overallRatingDiv.innerHTML != 'N/A'){
                         overallRating = overallRatingDiv.innerHTML;
                     }
                     if(typeof diffRatingDiv != 'undefined'){
@@ -146,7 +158,14 @@ async function sortCurrentClasses(target, profJson, TBA_RATINGS, sortButtonIds){
 
                     profRatings.push({overallRating : overallRating, diffRating : diffRating, classIndex : savedClassIndex});
                     if(profRatings.length == allClasses.length){
-                        resolve([profRatings, savedClassData, allClasses]);
+                        let profRatingsOverall = sortRatings(profRatings, true);
+                        let profRatingsDiff = profRatingsOverall;
+                        //let profRatingsDiff = sortRatings(profRatings, false);
+                        console.log("Prof ratings by overall:");
+                        printProfRating(profRatingsOverall);
+                        console.log("Prof ratings by difficulty:");
+                        printProfRating(profRatingsDiff);
+                        resolve([profRatingsOverall, profRatingsDiff, savedClassData, allClasses]);
                     }
                 });
             }else{
@@ -154,14 +173,22 @@ async function sortCurrentClasses(target, profJson, TBA_RATINGS, sortButtonIds){
             }
         }
         if(profRatings.length == allClasses.length){
-            resolve([profRatings, savedClassData, allClasses]);
+            let profRatingsOverall = sortRatings(profRatings, true);
+            let profRatingsDiff = profRatingsOverall;
+            //let profRatingsDiff = sortRatings(profRatings, false);
+            console.log("Prof ratings by overall:");
+            printProfRating(profRatingsOverall);
+            console.log("Prof ratings by difficulty:");
+            printProfRating(profRatingsDiff);
+            resolve([profRatingsOverall, profRatingsDiff, savedClassData, allClasses]);
         }
     });
-
+    // why don't we just store two versions of prof ratings, one for overall, one for diff, so we don't have to sort every time
     messageReceived.then((promiseArr) => {
-        var profRatings = promiseArr[0];
-        var savedClassData = promiseArr[1];
-        var allClasses = promiseArr[2];
+        var profRatingsOverall = promiseArr[0];
+        var profRatingsDiff = promiseArr[1];
+        var savedClassData = promiseArr[2];
+        var allClasses = promiseArr[3];
         var sortOverallButton = document.getElementById(sortButtonIds[0]);
         var sortDiffButton = document.getElementById(sortButtonIds[1]);
         
@@ -169,13 +196,11 @@ async function sortCurrentClasses(target, profJson, TBA_RATINGS, sortButtonIds){
         changeHtmlOfDiv(sortDiffButton, "Sort By Difficulty Rating");
         sortOverallButton.onclick = () => {
             if(savedClassData.length == 0) savedClassData = getDataFromHtml(allClasses);
-            profRatings = sortRatings(profRatings, true);
-            allClasses = changeHtmlOfRows(savedClassData, profRatings, target.getElementsByClassName("data-item"));
+            allClasses = changeHtmlOfRows(savedClassData, profRatingsOverall, target.getElementsByClassName("data-item"));
         };
         sortDiffButton.onclick = () => {
             if(savedClassData.length == 0) savedClassData = getDataFromHtml(allClasses);
-            profRatings = sortRatings(profRatings, false);
-            allClasses = changeHtmlOfRows(savedClassData, profRatings, target.getElementsByClassName("data-item"));
+            allClasses = changeHtmlOfRows(savedClassData, profRatingsDiff, target.getElementsByClassName("data-item"));
         };
         //sortOnButtonClick(target, sortOverallButton, profRatings, true, allClasses, savedClassData);
         //sortOnButtonClick(target, sortDiffButton, profRatings, false, allClasses, savedClassData);
@@ -245,6 +270,13 @@ fetch(url)
 
 /* 
 TODO:
+1. Figure out bug:
+    a. We are trying to see why it doesn't sort by overall when select wc
+    b. It seems that it sorts by difficulty when we click sortbyoverall
+    c. Lets see what happens when we sort at end of sortmyclasses
+    d. See if it works on smaller class lengths(does sort by overall work or does it also sort by diff on small class lengths)
+
+
 1. Fix bug:
     a. The bug is that if there are too many classes, then the first time you sort it doesn't sort correctly (try selecting only WC, and sorting by OVerall initially)
         Wierd thing is bug only happens the first time we click SortByOverall. After clicking sortbydiff, we can then sortbyoverall effeciently as well.
