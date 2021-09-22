@@ -21,12 +21,8 @@ function sortRatings(profRatings, sortByOverall){
     profRatings.sort(function compareProfs(profObjLeft, profObjRight){
         if(sortByOverall){
             if(profObjLeft.overallRating > profObjRight.overallRating){
-                //console.log("Prof Obj left, right overall: " + profObjLeft.overallRating + " " + profObjRight.overallRating);
-                //console.log("Left > right");
                 return -1;
             }else if(profObjLeft.overallRating < profObjRight.overallRating){
-                //console.log("Prof Obj left, right overall: " + profObjLeft.overallRating + " " + profObjRight.overallRating);
-                //console.log("left < right");
                 return 1;
             }
             return 0;
@@ -44,7 +40,6 @@ function sortRatings(profRatings, sortByOverall){
 }
 
 function changeHtmlOfRows(savedClassData, sortedClasses, htmlOfClassRows){
-    console.log("Changing HTML of this row:");
     for(var classIndex = 0; classIndex < htmlOfClassRows.length; classIndex++){
         htmlOfClassRows[classIndex].innerHTML = savedClassData[sortedClasses[classIndex].classIndex];
     }
@@ -112,12 +107,9 @@ function scrapeDifficultyRating(doc){
 
 function getDataFromHtml(allClasses){
     var savedClasses = [];
-    console.log("Saving Classes:");
     for(var classInd = 0; classInd < allClasses.length; classInd++){
-        console.log(classInd);
         savedClasses.push(allClasses[classInd].innerHTML);
     }
-    console.log("Done saving classes");
     return savedClasses;
 }
 
@@ -133,7 +125,8 @@ async function sortCurrentClasses(target, profJson, TBA_RATINGS, sortButtonIds){
     let messageReceived = new Promise(function(resolve, reject){
         var allClasses = target.getElementsByClassName("data-item");
         var savedClassData = [];
-        var profRatings = [];
+        var profOverallRatings = [];
+        var profDiffRatings = [];
         var profTids = [];
 
         for(var classIndex = 0; classIndex < allClasses.length; classIndex++){
@@ -152,35 +145,36 @@ async function sortCurrentClasses(target, profJson, TBA_RATINGS, sortButtonIds){
                     if(typeof overallRatingDiv != 'undefined' && overallRatingDiv.innerHTML != 'N/A'){
                         overallRating = overallRatingDiv.innerHTML;
                     }
-                    if(typeof diffRatingDiv != 'undefined'){
+                    if(typeof diffRatingDiv != 'undefined' && diffRatingDiv.innerHTML != 'N/A'){
                         diffRating = diffRatingDiv.innerHTML;
                     }
 
-                    profRatings.push({overallRating : overallRating, diffRating : diffRating, classIndex : savedClassIndex});
-                    if(profRatings.length == allClasses.length){
-                        let profRatingsOverall = sortRatings(profRatings, true);
-                        let profRatingsDiff = profRatingsOverall;
-                        //let profRatingsDiff = sortRatings(profRatings, false);
+                    //profRatings.push({overallRating : overallRating, diffRating : diffRating, classIndex : savedClassIndex});
+                    profOverallRatings.push({overallRating : overallRating, classIndex : savedClassIndex});
+                    profDiffRatings.push({diffRating: diffRating, classIndex : savedClassIndex});
+                    if(profOverallRatings.length == allClasses.length){
+                        profOverallRatings = sortRatings(profOverallRatings, true);
+                        profDiffRatings = sortRatings(profDiffRatings, false);
                         console.log("Prof ratings by overall:");
-                        printProfRating(profRatingsOverall);
+                        printProfRating(profOverallRatings);
                         console.log("Prof ratings by difficulty:");
-                        printProfRating(profRatingsDiff);
-                        resolve([profRatingsOverall, profRatingsDiff, savedClassData, allClasses]);
+                        printProfRating(profDiffRatings);
+                        resolve([profOverallRatings, profDiffRatings, savedClassData, allClasses]);
                     }
                 });
             }else{
-                profRatings.push({overallRating : TBA_RATINGS[0], diffRating : TBA_RATINGS[1], classIndex : classIndex});
+                profOverallRatings.push({overallRating : TBA_RATINGS[0], classIndex : classIndex});
+                profDiffRatings.push({diffRating: TBA_RATINGS[1], classIndex : classIndex});
             }
         }
-        if(profRatings.length == allClasses.length){
-            let profRatingsOverall = sortRatings(profRatings, true);
-            let profRatingsDiff = profRatingsOverall;
-            //let profRatingsDiff = sortRatings(profRatings, false);
+        if(profOverallRatings.length == allClasses.length){
+            profOverallRatings = sortRatings(profOverallRatings, true);
+            profDiffRatings = sortRatings(profDiffRatings, false);
             console.log("Prof ratings by overall:");
-            printProfRating(profRatingsOverall);
+            printProfRating(profOverallRatings);
             console.log("Prof ratings by difficulty:");
-            printProfRating(profRatingsDiff);
-            resolve([profRatingsOverall, profRatingsDiff, savedClassData, allClasses]);
+            printProfRating(profDiffRatings);
+            resolve([profOverallRatings, profDiffRatings, savedClassData, allClasses]);
         }
     });
     // why don't we just store two versions of prof ratings, one for overall, one for diff, so we don't have to sort every time
@@ -275,7 +269,10 @@ TODO:
     b. It seems that it sorts by difficulty when we click sortbyoverall
     c. Lets see what happens when we sort at end of sortmyclasses
     d. See if it works on smaller class lengths(does sort by overall work or does it also sort by diff on small class lengths)
-
+2. Test with the green red extension thing 
+    a. If i installed it before rmp links and sort by ratings, does everything work?
+    b. What about after?
+3. Split stuff in sortcurrentclasses into functions whenever they are repeatd
 
 1. Fix bug:
     a. The bug is that if there are too many classes, then the first time you sort it doesn't sort correctly (try selecting only WC, and sorting by OVerall initially)
