@@ -262,23 +262,10 @@ fetch(url)
 
 /* 
 TODO:
-1. Figure out bug:
-    a. We are trying to see why it doesn't sort by overall when select wc
-    b. It seems that it sorts by difficulty when we click sortbyoverall
-    c. Lets see what happens when we sort at end of sortmyclasses
-    d. See if it works on smaller class lengths(does sort by overall work or does it also sort by diff on small class lengths)
-2. Test with the green red extension thing 
-    a. If i installed it before rmp links and sort by ratings, does everything work?
-    b. What about after?
-3. Split stuff in sortcurrentclasses into functions whenever they are repeatd
-
-1. Fix bug:
-    a. The bug is that if there are too many classes, then the first time you sort it doesn't sort correctly (try selecting only WC, and sorting by OVerall initially)
-        Wierd thing is bug only happens the first time we click SortByOverall. After clicking sortbydiff, we can then sortbyoverall effeciently as well.
-    b. We first thought it was because sorting took too long and it changedRows before sorting finished, but using Promise didn't work
-    c. So it must be some other thing that isn't finishing before we changeHTML of Divs. 
-2. Make button ui better
-    a. Just make a little space between buttons
+2.5 Fix rmp links
+    i. Images that are used in the public view are blurry - fix!
+    ii. Make it so that for every professor, only capitalizes first letter, removes dashes, and if three words in name like first middle last, 
+    tries first_middle_last, first_last, and middle_last (just to decrease chance that professor has rmp page but our thing can't find it)
 3. Submit
 
 BTW:

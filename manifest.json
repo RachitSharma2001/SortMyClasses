@@ -1,6 +1,9 @@
 {
-    "name": "Testing",
+    "name": "Sort My Classes",
     "version": "0.1",
+    "icons": { "16": "Icon16.png",
+               "48": "Icon48.png",
+               "128": "Icon128.png" },
     "manifest_version": 3,
     "background": {
         "service_worker": "background.js"
