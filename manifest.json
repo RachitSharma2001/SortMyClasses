@@ -1,5 +1,6 @@
 {
     "name": "Sort My Classes",
+    "description": "Sort the classes on schedule builder based on ratings of professors!",
     "version": "0.1",
     "icons": { "16": "Icon16.png",
                "48": "Icon48.png",
