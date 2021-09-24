@@ -47,6 +47,23 @@ function scrapeDifficultyRating(doc){
 
 ```
 
+Another new concept I learned was the concept of promises. For chrome extension, you can only fetch in a background script, not in your main program script that is ran on ScheduleBuilder. Hence I need to send a message between content script and background sciript. The problem with this is that javascript treats this is as an asychronous command. This means that, after sending messages to get the ratings of professors 
+of each course, javascript will move on to the next command rather than wait for the messages to be responded to. This is problematic, because the next command after sending messages will use the responses from the messages. 
+
+This lead to into the javascript concept of Promises. With promises, you can execute asychronous command and then wait for them to finish and 
+return a value. Here is how I implemented this:
+
+```markdown
+let messageReceived = new Promise(function(resolve, reject){
+        ... send messages to background script in order to get html of professor pages, and then scrape for the ratings from the html.
+    });
+// wait for the above code to finish and return values. Then, add functionality to sort classes by ratings
+messageReceived.then((promiseArr) => {
+    ... Add sorting fuctionality
+}
+```
+
+
 For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
 
 ### Jekyll Themes
