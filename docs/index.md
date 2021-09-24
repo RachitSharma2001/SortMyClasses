@@ -66,10 +66,15 @@ messageReceived.then((promiseArr) => {
 
 For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
 
-### Jekyll Themes
+### How it can be improved
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/RachitSharma2001/SortMyClasses/settings/pages). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+If you use this extension, you may notice that if there are a lot of classes that result from your search, then it takes a few seconds before sorting functionality can be added to the page (the buttons just show loading for first few seconds). The reason for this is that my content script only sends one url request to the background rather than a load of urls. 
 
-### Support or Contact
+There is a function called Promise.all() that allows one to send many requests all at once to the background script. This would likely speed up my extension. However, when trying this, some strange phenomenon happened. Instead of returning the html of all the urls, it would return a generic html that did not contain information on ratings. I need to look into this bug. 
 
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+If you have any suggestion on how to improve the code, 
+### Contact
+
+If you have any suggestions on how I can improve the extension or the code design, please feel free to contact me. 
+My phone number: 408 425 7732
+My email: rachitsharma613@gmail.com
