@@ -9,7 +9,7 @@ This extension helps reduce this time to a mere few seconds. Two buttons are pro
 will change order to reflect the sorting method you chose.
 
 For example, lets say I am searching for a G.E to sign up this quarter, and I know I want the G.E to satisfy the Domestic Diversity and World Cultures. After entering these in and clicking search, many classes show up with many different professors. I want to take the classes with 
-the highest overall rated professors, so I click the "Sort By Overall Rating" button. After a second or two, the class options get sorted such that the top few classes are from the highest rated professors: (image). Now my course selection is easy: I just need to decide from the top few classes. 
+the highest overall rated professors, so I click the "Sort By Overall Rating" button. After a second or two, the class options get sorted such that the top few classes are from the highest rated professors: (<img src="https://rachitsharma2001.github.io/SortMyClasses/images/SortExample.png" style="display: block; margin: auto;" />). Now my course selection is easy: I just need to decide from the top few classes. 
 
 ### What I learned
 
@@ -63,9 +63,6 @@ messageReceived.then((promiseArr) => {
 }
 ```
 
-
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
 ### How it can be improved
 
 If you use this extension, you may notice that if there are a lot of classes that result from your search, then it takes a few seconds before sorting functionality can be added to the page (the buttons just show loading for first few seconds). The reason for this is that my content script only sends one url request to the background rather than a load of urls. 
@@ -76,5 +73,4 @@ If you have any suggestion on how to improve the code,
 ### Contact
 
 If you have any suggestions on how I can improve the extension or the code design, please feel free to contact me. 
-My phone number: 408 425 7732
 My email: rachitsharma613@gmail.com
