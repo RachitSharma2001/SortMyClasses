@@ -1,8 +1,15 @@
 ## UC Davis Sort My Classes
 
-You can use the [editor on GitHub](https://github.com/RachitSharma2001/SortMyClasses/edit/main/docs/index.md) to maintain and preview the content for your website in Markdown files.
+Schedule Builder is a website UC Davis students use to search and sign up for courses. Often, when deciding which courses to sign up for, 
+students use the ratemyprofessor ratings of the professor of a course. However, if there are several different courses that a student
+can take, then it takes up a lot of time to search for the ratings of each of the professors of the courses. 
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+This extension helps reduce this time to a mere few seconds. Two buttons are provided, one labeled "Sort by Overall Rating", and another labeled
+"Sort by Difficulty". After entering a course to search, you can click either of the two buttons and the classes that show up from the search 
+will change order to reflect the sorting method you chose.
+
+For example, lets say I am searching for a G.E to sign up this quarter, and I know I want the G.E to satisfy the Domestic Diversity and World Cultures. After entering these in and clicking search, many classes show up with many different professors. I want to take the classes with 
+the highest overall rated professors, so I click the "Sort By Overall Rating" button. After a second or two, the class options get sorted such that the top few classes are from the highest rated professors: (image). Now my course selection is easy: I just need to decide from the top few classes. 
 
 ### Markdown
 
