@@ -1,4 +1,4 @@
-## UC Davis Sort My Classes ([Install] () )
+## UC Davis Sort My Classes
 
 Schedule Builder is a website UC Davis students use to search and sign up for courses. Often, when deciding which courses to sign up for, 
 students use the ratemyprofessor ratings of the professor of a course. However, if there are several different courses that a student
@@ -9,7 +9,7 @@ This extension helps reduce this time to a mere few seconds. Two buttons are pro
 will change order to reflect the sorting method you chose.
 
 For example, lets say I am searching for a G.E to sign up this quarter, and I know I want the G.E to satisfy the Domestic Diversity and World Cultures. After entering these in and clicking search, many classes show up with many different professors. I want to take the classes with 
-the highest overall rated professors, so I click the "Sort By Overall Rating" button. After a second or two, the class options get sorted such that the top few classes are from the highest rated professors: (<img src="https://rachitsharma2001.github.io/SortMyClasses/images/SortExample.png" style="display: block; margin: auto;" />). Now my course selection is easy: I just need to decide from the top few classes. 
+the highest overall rated professors, so I click the "Sort By Overall Rating" button. After a second or two, the class options get sorted such that the top few classes are from the highest rated professors: <img src="https://rachitsharma2001.github.io/SortMyClasses/images/SortExample.png" style="display: block; margin: auto;" /> Now my course selection is easy: I just need to decide from the top few classes. 
 
 ### What I learned
 
