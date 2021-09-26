@@ -1,5 +1,7 @@
 ## UC Davis Sort My Classes
 
+[Install Here] (https://chrome.google.com/webstore/detail/sort-my-classes/bnidhdgmmbkcagojcfopaeedlnbnlhfe?hl=en&authuser=0)
+
 Schedule Builder is a website UC Davis students use to search and sign up for courses. Often, when deciding which courses to sign up for, 
 students use the ratemyprofessor ratings of the professor of a course. However, if there are several different courses that a student
 can take, then it takes up a lot of time to search for the ratings of each of the professors of the courses. 
