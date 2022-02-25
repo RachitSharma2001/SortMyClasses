@@ -1,7 +1,7 @@
 /* Functions not used yet */
 function printProfRating(profRatings){
     for(let classIndex = 0; classIndex < profRatings.length; classIndex++){
-        console.log("index, rating: " + profRatings[classIndex].classIndex + ", " + profRatings[classIndex].overallRating + ", " + profRatings[classIndex].diffRating);
+        //console.log("index, rating: " + profRatings[classIndex].classIndex + ", " + profRatings[classIndex].overallRating + ", " + profRatings[classIndex].diffRating);
     }
 }
 
@@ -47,6 +47,7 @@ function changeHtmlOfRows(savedClassData, sortedClasses, htmlOfClassRows){
 }
 
 function changeHtmlOfDiv(div, html){
+    //console.log("AT changeHtmlofDiv, here is given html, div, and div.innerHtml: " + html + ", " + div + ", " + div.innerHTML);
     div.innerHTML = html;
 }
 
@@ -120,19 +121,30 @@ function sortOnButtonClick(target, button, profRatings, sortByOverall, allClasse
     };
 }
 
+function getTidFromProfName(profName, profJson) {
+    if(profName == null){
+        return -1;
+    }
+    let profNameInFormat = getNameInFormat(profName);
+    return profJson[profNameInFormat];
+}
+
+function getProfNameFromInnerHtml(innerHtml) {
+    return innerHtml.substring(innerHtml.indexOf(">") + 1, innerHtml.indexOf("</a>"))
+}
+
 async function sortCurrentClasses(target, profJson, TBA_RATINGS, sortButtonIds){
 
     let messageReceived = new Promise(function(resolve, reject){
-        var allClasses = target.getElementsByClassName("data-item");
+        var classes = document.getElementsByClassName("results-instructor") 
         var savedClassData = [];
         var profOverallRatings = [];
         var profDiffRatings = [];
-        var profTids = [];
 
-        for(var classIndex = 0; classIndex < allClasses.length; classIndex++){
-            var profTid = getTid(allClasses[classIndex], profJson);
-
-            if(profTid != -1){
+        for(let classIndex = 0; classIndex < classes.length; classIndex++) {
+            var profName = classes[classIndex].textContent;
+            var profTid = getTidFromProfName(profName, profJson);
+            if(profTid != -1 && profTid != undefined){
                 const savedClassIndex = classIndex;
                 chrome.runtime.sendMessage({tid: "" + profTid}, async function(response) {
                     var parser = new DOMParser();
@@ -152,27 +164,31 @@ async function sortCurrentClasses(target, profJson, TBA_RATINGS, sortButtonIds){
                     //profRatings.push({overallRating : overallRating, diffRating : diffRating, classIndex : savedClassIndex});
                     profOverallRatings.push({overallRating : overallRating, classIndex : savedClassIndex});
                     profDiffRatings.push({diffRating: diffRating, classIndex : savedClassIndex});
-                    if(profOverallRatings.length == allClasses.length){
+                    if(profOverallRatings.length == classes.length){
                         profOverallRatings = sortRatings(profOverallRatings, true);
                         profDiffRatings = sortRatings(profDiffRatings, false);
-                        resolve([profOverallRatings, profDiffRatings, savedClassData, allClasses]);
+                        resolve([profOverallRatings, profDiffRatings, savedClassData, document.getElementsByClassName("course-container")]);
                     }
                 });
             }else{
                 profOverallRatings.push({overallRating : TBA_RATINGS[0], classIndex : classIndex});
                 profDiffRatings.push({diffRating: TBA_RATINGS[1], classIndex : classIndex});
             }
-        }
-        if(profOverallRatings.length == allClasses.length){
+        } 
+        if(profOverallRatings.length == classes.length){
             profOverallRatings = sortRatings(profOverallRatings, true);
             profDiffRatings = sortRatings(profDiffRatings, false);
-            resolve([profOverallRatings, profDiffRatings, savedClassData, allClasses]);
+            resolve([profOverallRatings, profDiffRatings, savedClassData, classes]);
         }
     });
     // why don't we just store two versions of prof ratings, one for overall, one for diff, so we don't have to sort every time
     messageReceived.then((promiseArr) => {
         var profRatingsOverall = promiseArr[0];
         var profRatingsDiff = promiseArr[1];
+        console.log("Overall ratings length: " + profRatingsOverall.length);
+        for(let i = 0; i < profRatingsOverall.length; i++) {
+            console.log(profRatingsOverall[i].overallRating)
+        }
         var savedClassData = promiseArr[2];
         var allClasses = promiseArr[3];
         var sortOverallButton = document.getElementById(sortButtonIds[0]);
@@ -181,8 +197,10 @@ async function sortCurrentClasses(target, profJson, TBA_RATINGS, sortButtonIds){
         changeHtmlOfDiv(sortOverallButton, "Sort By Overall Rating");
         changeHtmlOfDiv(sortDiffButton, "Sort By Difficulty Rating");
         sortOverallButton.onclick = () => {
+            //console.log('Overall Clicked');
             if(savedClassData.length == 0) savedClassData = getDataFromHtml(allClasses);
-            allClasses = changeHtmlOfRows(savedClassData, profRatingsOverall, target.getElementsByClassName("data-item"));
+            console.log("document get elements: " + document.getElementsByClassName("course-container").innerHTML)
+            allClasses = changeHtmlOfRows(savedClassData, profRatingsOverall, document.getElementsByClassName("course-container"));
         };
         sortDiffButton.onclick = () => {
             if(savedClassData.length == 0) savedClassData = getDataFromHtml(allClasses);
@@ -213,16 +231,21 @@ function createSortingButtons(sortButtonIds){
 }
 
 function createObserver(target, profJson, sortButtons, sortButtonIds){
+    //console.log("At the function createObserver")
     return new MutationObserver(function(mutations) {
         mutations.forEach(function(mutation) {
             profRatings = [];
+            //console.log("First call to changeHtmlOfDiv")
+
             changeHtmlOfDiv(sortButtons[0], "Loading...");
             sortButtons[0].onclick = () => {
-               console.log("Still need to load all classes");
+               //console.log("Still need to load all classes");
             }
+
+            //console.log("Second call to changeHtmlOfDiv")
             changeHtmlOfDiv(sortButtons[1], "Loading...");
             sortButtons[1].onclick = () => {
-               console.log("Still need to load all classes");
+               //console.log("Still need to load all classes");
             }
             sortCurrentClasses(target, profJson, [-1, 6], sortButtonIds);
         });
