@@ -330,29 +330,32 @@ fetch(url)
     inlineSearchBar.appendChild(overallSortButton);
     overallSortButton.onclick = () => {
         let listOfProfDivs = document.getElementsByClassName("results-instructor");
-        console.log(listOfProfDivs)
+        let profFetchList = []
         for(i = 0; i < listOfProfDivs.length; i++) {
             let profName = listOfProfDivs[i].getElementsByTagName("a")[0].innerHTML;
-            console.log("Prof name: " + profName);
             let profTid = profJson[profName.replace(". ", "_")];
-            console.log("Prof tid: " + profTid)
-            chrome.runtime.sendMessage({tid: "" + profTid}, async function(response) {
-                var parser = new DOMParser();
-                var doc = parser.parseFromString(response.returned_text, "text/html");
-                var overallRatingDiv = doc.getElementsByClassName("RatingValue__Numerator-qw8sqy-2 liyUjw")[0];
-                var diffRatingDiv = doc.getElementsByClassName("FeedbackItem__FeedbackNumber-uof32n-1 kkESWs")[1];
-                let overallRating = undefined;
-                let diffRating = undefined;
-                if(typeof overallRatingDiv != 'undefined' && overallRatingDiv.innerHTML != 'N/A'){
-                    overallRating = overallRatingDiv.innerHTML;
-                }
-                if(typeof diffRatingDiv != 'undefined' && diffRatingDiv.innerHTML != 'N/A'){
-                    diffRating = diffRatingDiv.innerHTML;
-                }
-                console.log("Overall Rating of " + profName + ": " + overallRating);
-                console.log("Difficulty Rating of " + profName + ": " + diffRating);
-            }); 
+            profFetchList.push(new Promise((resolve, reject) => {
+                chrome.runtime.sendMessage({tid: "" + profTid}, async function(response) {
+                    var parser = new DOMParser();
+                    var doc = parser.parseFromString(response.returned_text, "text/html");
+                    var overallRatingDiv = doc.getElementsByClassName("RatingValue__Numerator-qw8sqy-2 liyUjw")[0];
+                    var diffRatingDiv = doc.getElementsByClassName("FeedbackItem__FeedbackNumber-uof32n-1 kkESWs")[1];
+                    let overallRating = undefined;
+                    let diffRating = undefined;
+                    if(typeof overallRatingDiv != 'undefined' && overallRatingDiv.innerHTML != 'N/A'){
+                        overallRating = overallRatingDiv.innerHTML;
+                    }
+                    if(typeof diffRatingDiv != 'undefined' && diffRatingDiv.innerHTML != 'N/A'){
+                        diffRating = diffRatingDiv.innerHTML;
+                    }
+                    resolve([overallRating, diffRating]);
+                }); 
+            }));
         }
-
+        Promise.all(profFetchList).then((profRatings) => {
+            for(i = 0; i < profRatings.length; i++) {
+                console.log("Rating: " + profRatings[i]);
+            }
+        });
     }
 });
