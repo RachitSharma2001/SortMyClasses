@@ -326,14 +326,20 @@ fetch(url)
         })
     */
     let inlineSearchBar = document.getElementsByClassName("course-search-crn-title-container")[0];
-    let overallSortButton = createButton("Sort by Overall Rating", "inline");
-    inlineSearchBar.appendChild(overallSortButton);
-    overallSortButton.onclick = () => {
+    let outlineSearchBar = document.getElementById("CoursesSearch").getElementsByClassName("modal-body")[0].getElementsByClassName("course-search-container")[0].getElementsByClassName("align-center")[0];
+
+    let outlineOverallSortButton = createButton("Sort by Overall Rating", "outline");
+    let inlineOverallSortButton = createButton("Sort by Overall Rating", "inline");
+
+    inlineSearchBar.appendChild(inlineOverallSortButton);
+    outlineSearchBar.appendChild(outlineOverallSortButton)
+    outlineOverallSortButton.onclick = () => {
         let listOfProfDivs = document.getElementsByClassName("results-instructor");
         let profFetchList = []
         for(i = 0; i < listOfProfDivs.length; i++) {
             let profName = listOfProfDivs[i].getElementsByTagName("a")[0].innerHTML;
             let profTid = profJson[profName.replace(". ", "_")];
+            const indexOfProf = i;
             profFetchList.push(new Promise((resolve, reject) => {
                 chrome.runtime.sendMessage({tid: "" + profTid}, async function(response) {
                     var parser = new DOMParser();
@@ -348,7 +354,7 @@ fetch(url)
                     if(typeof diffRatingDiv != 'undefined' && diffRatingDiv.innerHTML != 'N/A'){
                         diffRating = diffRatingDiv.innerHTML;
                     }
-                    resolve([overallRating, diffRating]);
+                    resolve([indexOfProf, overallRating, diffRating]);
                 }); 
             }));
         }
