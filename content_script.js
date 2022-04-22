@@ -309,22 +309,7 @@ const url = chrome.runtime.getURL('ProfTids.txt');
 fetch(url)
 .then((response) => response.json())
 .then((profJson) => {
-    /* Two parts of this:
-        1. Figure out where the schedule builder page stores instructor(s) -> grab all these instructors
-        2. Then execute the following
-        professorFetchList = []
-        for i = 0; i < num professors; i++ {
-            professorFetchList.push(new Promise(resolve, reject) {
-                // code to go to background.js, which then fetches from rmp
-                chrome.runtime.sendMessage({tid: "" + profTid}, ...)
-            })
-        }
-        Promise.all(professorFetchList).then((htmlPageOfallProfessors) {
-            for htmlPage in results {
-                parse html in order to find where rating is
-            }
-        })
-    */
+    
     let inlineSearchBar = document.getElementsByClassName("course-search-crn-title-container")[0];
     let outlineSearchBar = document.getElementById("CoursesSearch").getElementsByClassName("modal-body")[0].getElementsByClassName("course-search-container")[0].getElementsByClassName("align-center")[0];
 
@@ -333,7 +318,9 @@ fetch(url)
 
     inlineSearchBar.appendChild(inlineOverallSortButton);
     outlineSearchBar.appendChild(outlineOverallSortButton)
-    outlineOverallSortButton.onclick = () => {
+    inlineOverallSortButton.onclick = () => {        
+        /* the following commented code correctly gets list of professors */
+
         let listOfProfDivs = document.getElementsByClassName("results-instructor");
         let profFetchList = []
         for(i = 0; i < listOfProfDivs.length; i++) {
@@ -358,10 +345,38 @@ fetch(url)
                 }); 
             }));
         }
+
+        let overallRatings = [];
         Promise.all(profFetchList).then((profRatings) => {
-            for(i = 0; i < profRatings.length; i++) {
-                console.log("Rating: " + profRatings[i]);
+            for(let i = 0; i < profRatings.length; i++) {
+                overallRatings.push({"OrigIndex": profRatings[i][0], "OverallRating" : profRatings[i][1]});
             }
+            console.log("Overall Ratings before sort:");
+            for(let i = 0; i < overallRatings.length; i++) {
+                console.log(overallRatings[i]["OrigIndex"] + ", " + overallRatings[i]["OverallRating"]);
+            }
+            overallRatings.sort((firstProf, secondProf) => {
+                if(firstProf["OverallRating"] < secondProf["OverallRating"]) {
+                    return 1;
+                } else {
+                    return -1;
+                }
+            });
+            console.log("Overall Ratings after sort: ");
+            for(let i = 0; i < overallRatings.length; i++) {
+                console.log(overallRatings[i]["OrigIndex"] + ", " + overallRatings[i]["OverallRating"]);
+            }
+            
+
+            /*  HERE: Trying to shallow copy the course container object from the DOM */
+            const oldCourseOrder = Object.assign({}, document.getElementsByClassName("course-container"));
+
+            let newCourseOrder = document.getElementsByClassName("course-container");
+            for(let classIndex = 0; classIndex < oldCourseOrder.length; classIndex++){
+                console.log("For " + classIndex + ", the overall ratings: " + overallRatings[classIndex]["OrigIndex"] + ", " + overallRatings[classIndex]["OverallRating"]);
+                newCourseOrder[classIndex].innerHTML = oldCourseOrder[overallRatings[classIndex]["OrigIndex"]].innerHTML;
+            }    
         });
+
     }
 });
