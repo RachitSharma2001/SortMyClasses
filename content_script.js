@@ -368,13 +368,15 @@ fetch(url)
             }
             
 
-            /*  HERE: Trying to shallow copy the course container object from the DOM */
-            const oldCourseOrder = Object.assign({}, document.getElementsByClassName("course-container"));
-
-            let newCourseOrder = document.getElementsByClassName("course-container");
+            /*  HERE: Trying to shallow py the course container object from the DOM */
+            let oldCourseOrder = document.getElementsByClassName("course-container");
+            let newSortedProfsHtml = []
             for(let classIndex = 0; classIndex < oldCourseOrder.length; classIndex++){
                 console.log("For " + classIndex + ", the overall ratings: " + overallRatings[classIndex]["OrigIndex"] + ", " + overallRatings[classIndex]["OverallRating"]);
-                newCourseOrder[classIndex].innerHTML = oldCourseOrder[overallRatings[classIndex]["OrigIndex"]].innerHTML;
+                newSortedProfsHtml.push(oldCourseOrder[overallRatings[classIndex]["OrigIndex"]].innerHTML);
+            }    
+            for(let classIndex = 0; classIndex < oldCourseOrder.length; classIndex++){
+                oldCourseOrder[classIndex].innerHTML = newSortedProfsHtml[classIndex];
             }    
         });
 
