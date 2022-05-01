@@ -337,9 +337,14 @@ fetch(url)
                     let diffRating = undefined;
                     if(typeof overallRatingDiv != 'undefined' && overallRatingDiv.innerHTML != 'N/A'){
                         overallRating = overallRatingDiv.innerHTML;
+                    } else {
+                        overallRating = -1;
                     }
+
                     if(typeof diffRatingDiv != 'undefined' && diffRatingDiv.innerHTML != 'N/A'){
                         diffRating = diffRatingDiv.innerHTML;
+                    } else {
+                        diffRating = -1;
                     }
                     resolve([indexOfProf, overallRating, diffRating]);
                 }); 
