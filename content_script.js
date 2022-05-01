@@ -298,6 +298,31 @@
 // */
 
 
+
+
+
+
+
+const url = chrome.runtime.getURL('ProfTids.txt');
+fetch(url)
+.then((response) => response.json())
+.then((profJson) => {
+    let inlineOverallSortButton = createButton("Sort by Overall Rating", "inline");
+    let outlineOverallSortButton = createButton("Sort by Overall Rating", "outline");
+    addInlineSortButtonToView(inlineOverallSortButton);
+    addOutlineSortButton(outlineOverallSortButton);
+    
+    inlineOverallSortButton.onclick = () => {   
+        console.log("Sorting the inline professors");     
+        sortProfessors(profJson);
+    }
+
+    outlineOverallSortButton.onclick = () => {
+        console.log("Sorting the outline professors");
+        sortProfessors(profJson);
+    }
+});
+
 function createButton(buttonInnerHtml, buttonId){
     var sortRatingButton = document.createElement('BUTTON');
     sortRatingButton.id = buttonId;
@@ -305,85 +330,95 @@ function createButton(buttonInnerHtml, buttonId){
     return sortRatingButton;
 }
 
-const url = chrome.runtime.getURL('ProfTids.txt');
-fetch(url)
-.then((response) => response.json())
-.then((profJson) => {
-    
+function addInlineSortButtonToView(inlineOverallSortButton) {
     let inlineSearchBar = document.getElementsByClassName("course-search-crn-title-container")[0];
-    let outlineSearchBar = document.getElementById("CoursesSearch").getElementsByClassName("modal-body")[0].getElementsByClassName("course-search-container")[0].getElementsByClassName("align-center")[0];
-
-    let outlineOverallSortButton = createButton("Sort by Overall Rating", "outline");
-    let inlineOverallSortButton = createButton("Sort by Overall Rating", "inline");
-
     inlineSearchBar.appendChild(inlineOverallSortButton);
+}
+
+function addOutlineSortButton(outlineOverallSortButton) {
+    let outlineSearchBar = document.getElementById("CoursesSearch").getElementsByClassName("modal-body")[0].getElementsByClassName("course-search-container")[0].getElementsByClassName("align-center")[0];
     outlineSearchBar.appendChild(outlineOverallSortButton)
-    inlineOverallSortButton.onclick = () => {        
-        /* the following commented code correctly gets list of professors */
+}
 
-        let listOfProfDivs = document.getElementsByClassName("results-instructor");
-        let profFetchList = []
-        for(i = 0; i < listOfProfDivs.length; i++) {
-            let profName = listOfProfDivs[i].getElementsByTagName("a")[0].innerHTML;
-            let profTid = profJson[profName.replace(". ", "_")];
-            const indexOfProf = i;
-            profFetchList.push(new Promise((resolve, reject) => {
-                chrome.runtime.sendMessage({tid: "" + profTid}, async function(response) {
-                    var parser = new DOMParser();
-                    var doc = parser.parseFromString(response.returned_text, "text/html");
-                    var overallRatingDiv = doc.getElementsByClassName("RatingValue__Numerator-qw8sqy-2 liyUjw")[0];
-                    var diffRatingDiv = doc.getElementsByClassName("FeedbackItem__FeedbackNumber-uof32n-1 kkESWs")[1];
-                    let overallRating = undefined;
-                    let diffRating = undefined;
-                    if(typeof overallRatingDiv != 'undefined' && overallRatingDiv.innerHTML != 'N/A'){
-                        overallRating = overallRatingDiv.innerHTML;
-                    } else {
-                        overallRating = -1;
-                    }
 
-                    if(typeof diffRatingDiv != 'undefined' && diffRatingDiv.innerHTML != 'N/A'){
-                        diffRating = diffRatingDiv.innerHTML;
-                    } else {
-                        diffRating = -1;
-                    }
-                    resolve([indexOfProf, overallRating, diffRating]);
-                }); 
-            }));
-        }
 
-        let overallRatings = [];
-        Promise.all(profFetchList).then((profRatings) => {
-            for(let i = 0; i < profRatings.length; i++) {
-                overallRatings.push({"OrigIndex": profRatings[i][0], "OverallRating" : profRatings[i][1]});
+function createObserver(target, profJson, sortButtons, sortButtonIds){
+    return new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            profRatings = [];
+
+            changeHtmlOfDiv(sortButtons[0], "Loading...");
+            sortButtons[0].onclick = () => {
             }
-            console.log("Overall Ratings before sort:");
-            for(let i = 0; i < overallRatings.length; i++) {
-                console.log(overallRatings[i]["OrigIndex"] + ", " + overallRatings[i]["OverallRating"]);
+
+            changeHtmlOfDiv(sortButtons[1], "Loading...");
+            sortButtons[1].onclick = () => {
             }
-            overallRatings.sort((firstProf, secondProf) => {
-                if(firstProf["OverallRating"] < secondProf["OverallRating"]) {
-                    return 1;
+            sortCurrentClasses(target, profJson, [-1, 6], sortButtonIds);
+        });
+    });
+}
+
+function detectDomChange(target, profJson, sortButtons, sortButtonIds){
+    var config = { attributes: true, childList: true, characterData: true };
+    var observer = createObserver(target, profJson, sortButtons, sortButtonIds);
+    observer.observe(target, config);
+}
+
+
+function sortProfessors(profJson) {
+    let listOfProfDivs = document.getElementsByClassName("results-instructor");
+    let profFetchList = []
+    for(i = 0; i < listOfProfDivs.length; i++) {
+        let profName = listOfProfDivs[i].getElementsByTagName("a")[0].innerHTML;
+        let profTid = profJson[profName.replace(". ", "_")];
+        const indexOfProf = i;
+        profFetchList.push(new Promise((resolve, reject) => {
+            chrome.runtime.sendMessage({tid: "" + profTid}, async function(response) {
+                var parser = new DOMParser();
+                var doc = parser.parseFromString(response.returned_text, "text/html");
+                var overallRatingDiv = doc.getElementsByClassName("RatingValue__Numerator-qw8sqy-2 liyUjw")[0];
+                var diffRatingDiv = doc.getElementsByClassName("FeedbackItem__FeedbackNumber-uof32n-1 kkESWs")[1];
+                let overallRating = undefined;
+                let diffRating = undefined;
+                if(typeof overallRatingDiv != 'undefined' && overallRatingDiv.innerHTML != 'N/A'){
+                    overallRating = overallRatingDiv.innerHTML;
                 } else {
-                    return -1;
+                    overallRating = -1;
                 }
-            });
-            console.log("Overall Ratings after sort: ");
-            for(let i = 0; i < overallRatings.length; i++) {
-                console.log(overallRatings[i]["OrigIndex"] + ", " + overallRatings[i]["OverallRating"]);
-            }
-            
 
-            /*  HERE: Trying to shallow py the course container object from the DOM */
-            let oldCourseOrder = document.getElementsByClassName("course-container");
-            let newSortedProfsHtml = []
-            for(let classIndex = 0; classIndex < oldCourseOrder.length; classIndex++){
-                console.log("For " + classIndex + ", the overall ratings: " + overallRatings[classIndex]["OrigIndex"] + ", " + overallRatings[classIndex]["OverallRating"]);
-                newSortedProfsHtml.push(oldCourseOrder[overallRatings[classIndex]["OrigIndex"]].innerHTML);
-            }    
-            for(let classIndex = 0; classIndex < oldCourseOrder.length; classIndex++){
-                oldCourseOrder[classIndex].innerHTML = newSortedProfsHtml[classIndex];
-            }    
+                if(typeof diffRatingDiv != 'undefined' && diffRatingDiv.innerHTML != 'N/A'){
+                    diffRating = diffRatingDiv.innerHTML;
+                } else {
+                    diffRating = -1;
+                }
+                resolve([indexOfProf, overallRating, diffRating]);
+            }); 
+        }));
+    }
+
+    let overallRatings = [];
+    Promise.all(profFetchList).then((profRatings) => {
+        for(let i = 0; i < profRatings.length; i++) {
+            overallRatings.push({"OrigIndex": profRatings[i][0], "OverallRating" : profRatings[i][1]});
+        } 
+        overallRatings.sort((firstProf, secondProf) => {
+            if(firstProf["OverallRating"] < secondProf["OverallRating"]) {
+                return 1;
+            } else {
+                return -1;
+            }
         });
 
-    }
-});
+        let oldCourseOrder = document.getElementsByClassName("course-container");
+        let newSortedProfsHtml = []
+        for(let classIndex = 0; classIndex < oldCourseOrder.length; classIndex++){
+            console.log("For " + classIndex + ", the overall ratings: " + overallRatings[classIndex]["OrigIndex"] + ", " + overallRatings[classIndex]["OverallRating"]);
+            newSortedProfsHtml.push(oldCourseOrder[overallRatings[classIndex]["OrigIndex"]].innerHTML);
+        }    
+        for(let classIndex = 0; classIndex < oldCourseOrder.length; classIndex++){
+            oldCourseOrder[classIndex].innerHTML = newSortedProfsHtml[classIndex];
+        }    
+    });
+}
+
