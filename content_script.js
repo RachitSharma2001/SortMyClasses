@@ -308,15 +308,29 @@ fetch(url)
 .then((response) => response.json())
 .then((profJson) => {
     let inlineOverallSortButton = createButton("Sort by Overall Rating", "inline");
+    let inlineDiffSortButton = createButton("Sort by Difficulty Rating", "inline");
     let outlineOverallSortButton = createButton("Sort by Overall Rating", "outline");
+    let outlineDiffSortButton = createButton("Sort by Difficulty Rating", "outline");
+
     addInlineSortButtonToView(inlineOverallSortButton);
+    addInlineSortButtonToView(inlineDiffSortButton);
     addOutlineSortButton(outlineOverallSortButton);
+    addOutlineSortButton(outlineDiffSortButton);
+
     inlineOverallSortButton.onclick = () => {   
         sortByOverallRating(profJson, inlineOverallSortButton)
     }
 
+    inlineDiffSortButton.onclick = () => {   
+        sortByDiffRating(profJson, inlineDiffSortButton)
+    }
+
     outlineOverallSortButton.onclick = () => {
         sortByOverallRating(profJson, outlineOverallSortButton);
+    }
+
+    outlineDiffSortButton.onclick = () => {   
+        sortByDiffRating(profJson, outlineDiffSortButton)
     }
 });
 
@@ -394,8 +408,59 @@ function sortByOverallRating(profJson, sortButton) {
         for(let classIndex = 0; classIndex < oldCourseOrder.length; classIndex++){
             oldCourseOrder[classIndex].innerHTML = newSortedProfsHtml[classIndex];
         }
+    });
+}
+
+function sortByDiffRating(profJson, sortButton) {
+    sortButton.innerText = "Loading...";
+    let listOfProfDivs = document.getElementsByClassName("results-instructor");
+    let profRatings = []
+    for(i = 0; i < listOfProfDivs.length; i++) {
+        let profName = listOfProfDivs[i].getElementsByTagName("a")[0].innerHTML;
+        let profTid = profJson[profName.replace(". ", "_")];
+        const indexOfProf = i;
+        profRatings.push(new Promise((resolve, reject) => {
+            chrome.runtime.sendMessage({tid: "" + profTid}, async function(response) {
+                var parser = new DOMParser();
+                var doc = parser.parseFromString(response.returned_text, "text/html");
+                var diffRatingDiv = doc.getElementsByClassName("FeedbackItem__FeedbackNumber-uof32n-1 kkESWs")[1];
+                let diffRating = undefined;
+
+                if(typeof diffRatingDiv != 'undefined' && diffRatingDiv.innerHTML != 'N/A'){
+                    diffRating = diffRatingDiv.innerHTML;
+                } else {
+                    diffRating = 6;
+                }
+                resolve([indexOfProf, diffRating]);
+            }); 
+        }));
+    }
+
+    let diffRatings = [];
+    Promise.all(profRatings).then((profRatings) => {
+        for(let i = 0; i < profRatings.length; i++) {
+            diffRatings.push({"OrigIndex": profRatings[i][0], "DiffRating" : profRatings[i][1]});
+        } 
+        diffRatings.sort((firstProf, secondProf) => {
+            if(firstProf["DiffRating"] > secondProf["DiffRating"]) {
+                return 1;
+            } else {
+                return -1;
+            }
+        });
+
+        sortButton.innerText = "Sort By Difficulty Rating";
+
+        let oldCourseOrder = document.getElementsByClassName("course-container");
+        let newSortedProfsHtml = []
+        for(let classIndex = 0; classIndex < oldCourseOrder.length; classIndex++){
+            console.log("For " + classIndex + ", the diff ratings: " + diffRatings[classIndex]["OrigIndex"] + ", " + diffRatings[classIndex]["DiffRating"]);
+            newSortedProfsHtml.push(oldCourseOrder[diffRatings[classIndex]["OrigIndex"]].innerHTML);
+        }    
         
-        
+        for(let classIndex = 0; classIndex < oldCourseOrder.length; classIndex++){
+            oldCourseOrder[classIndex].innerHTML = newSortedProfsHtml[classIndex];
+        }
     });
 }
 
