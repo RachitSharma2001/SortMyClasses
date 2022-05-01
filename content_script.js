@@ -311,15 +311,12 @@ fetch(url)
     let outlineOverallSortButton = createButton("Sort by Overall Rating", "outline");
     addInlineSortButtonToView(inlineOverallSortButton);
     addOutlineSortButton(outlineOverallSortButton);
-    
     inlineOverallSortButton.onclick = () => {   
-        console.log("Sorting the inline professors");     
-        sortProfessors(profJson);
+        sortByOverallRating(profJson, inlineOverallSortButton)
     }
 
     outlineOverallSortButton.onclick = () => {
-        console.log("Sorting the outline professors");
-        sortProfessors(profJson);
+        sortByOverallRating(profJson, outlineOverallSortButton);
     }
 });
 
@@ -340,40 +337,15 @@ function addOutlineSortButton(outlineOverallSortButton) {
     outlineSearchBar.appendChild(outlineOverallSortButton)
 }
 
-
-
-function createObserver(target, profJson, sortButtons, sortButtonIds){
-    return new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-            profRatings = [];
-
-            changeHtmlOfDiv(sortButtons[0], "Loading...");
-            sortButtons[0].onclick = () => {
-            }
-
-            changeHtmlOfDiv(sortButtons[1], "Loading...");
-            sortButtons[1].onclick = () => {
-            }
-            sortCurrentClasses(target, profJson, [-1, 6], sortButtonIds);
-        });
-    });
-}
-
-function detectDomChange(target, profJson, sortButtons, sortButtonIds){
-    var config = { attributes: true, childList: true, characterData: true };
-    var observer = createObserver(target, profJson, sortButtons, sortButtonIds);
-    observer.observe(target, config);
-}
-
-
-function sortProfessors(profJson) {
+function sortByOverallRating(profJson, sortButton) {
+    sortButton.innerText = "Loading...";
     let listOfProfDivs = document.getElementsByClassName("results-instructor");
-    let profFetchList = []
+    let profRatings = []
     for(i = 0; i < listOfProfDivs.length; i++) {
         let profName = listOfProfDivs[i].getElementsByTagName("a")[0].innerHTML;
         let profTid = profJson[profName.replace(". ", "_")];
         const indexOfProf = i;
-        profFetchList.push(new Promise((resolve, reject) => {
+        profRatings.push(new Promise((resolve, reject) => {
             chrome.runtime.sendMessage({tid: "" + profTid}, async function(response) {
                 var parser = new DOMParser();
                 var doc = parser.parseFromString(response.returned_text, "text/html");
@@ -398,7 +370,7 @@ function sortProfessors(profJson) {
     }
 
     let overallRatings = [];
-    Promise.all(profFetchList).then((profRatings) => {
+    Promise.all(profRatings).then((profRatings) => {
         for(let i = 0; i < profRatings.length; i++) {
             overallRatings.push({"OrigIndex": profRatings[i][0], "OverallRating" : profRatings[i][1]});
         } 
@@ -410,15 +382,20 @@ function sortProfessors(profJson) {
             }
         });
 
+        sortButton.innerText = "Sort By Overall Rating";
+
         let oldCourseOrder = document.getElementsByClassName("course-container");
         let newSortedProfsHtml = []
         for(let classIndex = 0; classIndex < oldCourseOrder.length; classIndex++){
             console.log("For " + classIndex + ", the overall ratings: " + overallRatings[classIndex]["OrigIndex"] + ", " + overallRatings[classIndex]["OverallRating"]);
             newSortedProfsHtml.push(oldCourseOrder[overallRatings[classIndex]["OrigIndex"]].innerHTML);
         }    
+        
         for(let classIndex = 0; classIndex < oldCourseOrder.length; classIndex++){
             oldCourseOrder[classIndex].innerHTML = newSortedProfsHtml[classIndex];
-        }    
+        }
+        
+        
     });
 }
 
